@@ -1,0 +1,23 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+  margin: 2rem;
+}
+
+textarea {
+  width: 60%;
+  padding: 10px;
+  font-size: 1rem;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 10px 20px;
+  font-size: 1rem;
+}
+
+.response {
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  text-align: left;
+}
