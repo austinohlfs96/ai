@@ -2,6 +2,8 @@ import os
 import logging
 import openai
 import re
+import requests
+import time
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -38,6 +40,44 @@ def load_knowledge_base():
 
 knowledge_base = load_knowledge_base()
 
+# Reverse geocode coordinates to readable city names
+def reverse_geocode(lat, lng, api_key):
+    try:
+        url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={api_key}"
+        resp = requests.get(url)
+        results = resp.json().get("results", [])
+        if results:
+            return results[0]["address_components"][0]["long_name"]
+    except Exception as e:
+        logging.warning(f"Reverse geocoding failed for {lat},{lng}: {e}")
+    return f"{lat},{lng}"
+
+# Get stops along route between origin and destination
+def get_route_stops(origin, destination, api_key, max_stops=4):
+    url = "https://maps.googleapis.com/maps/api/directions/json"
+    params = {
+        "origin": origin,
+        "destination": destination,
+        "key": api_key
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    if data['status'] != 'OK':
+        return []
+
+    steps = data['routes'][0]['legs'][0]['steps']
+    total_steps = len(steps)
+    interval = max(1, total_steps // max_stops)
+
+    waypoints = []
+    for i in range(0, total_steps, interval):
+        loc = steps[i]['end_location']
+        waypoint = reverse_geocode(loc['lat'], loc['lng'], api_key)
+        waypoints.append(waypoint)
+
+    return waypoints
+
 # --- UTILITIES ---
 
 def extract_location_from_question(question):
@@ -59,7 +99,6 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
     traffic_info = ""
     location_info = ""
 
-    # Weather extraction
     inferred_location = extract_location_from_question(user_question)
     effective_location = user_location or inferred_location
 
@@ -70,7 +109,6 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
         else:
             weather_info += f"\n⚠️ Weather data not available for {effective_location}.\n"
 
-    # Reservation weather
     if reservation_details:
         destination = reservation_details.get('destination')
         reservation_date = reservation_details.get('date')
@@ -81,22 +119,18 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
         if reservation_date:
             location_info += f"Reservation date: {reservation_date}\n"
 
-   # Route-based weather
-    if "route" in user_question.lower() or "travel" in user_question.lower():
-        origin, destination = extract_origin_destination(user_question)
-        if not origin and user_location and reservation_details.get('destination'):
-            origin = user_location
-            destination = reservation_details['destination']
-
-        if origin and destination:
-            dynamic_stops = get_route_stops(origin, destination, maps_api_key)
-            if dynamic_stops:
-                weather_info += f"\n🌤️ Route Weather:\n{weather_service.get_weather_along_route(dynamic_stops)}"
-            else:
-                weather_info += f"\n⚠️ Couldn't get route weather from {origin} to {destination}."
-
-    # Traffic extraction via regex
     origin, destination = extract_origin_destination(user_question)
+    if not origin and user_location and reservation_details.get('destination'):
+        origin = user_location
+        destination = reservation_details['destination']
+
+    if origin and destination:
+        stops = get_route_stops(origin, destination, maps_api_key)
+        if stops:
+            weather_info += f"\n🌤️ Route Weather:\n{weather_service.get_weather_along_route(stops)}"
+        else:
+            weather_info += f"\n⚠️ Couldn't get route weather from {origin} to {destination}."
+
     if origin and destination:
         traffic_data = traffic_service.get_traffic_summary(origin, destination)
         if traffic_data:
@@ -104,7 +138,6 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
         else:
             traffic_info += f"\n⚠️ Could not retrieve traffic info from {origin} to {destination}.\n"
 
-    # Final prompt
     prompt = f"""
 You are Spot, the official AI assistant for SpotSurfer Parking.
 Your job is to provide helpful, concise, and always SpotSurfer-focused parking advice, suggestions, and answers first then use your best knowledge to help the user.
@@ -148,7 +181,7 @@ def query_contextual_response(prompt):
         logging.error(f"OpenAI query failed: {e}")
         return "⚠️ Sorry, I couldn't get the information right now. Please try again shortly."
 
-# --- ROUTE ---
+# --- ROUTES ---
 
 @app.route('/')
 def serve_react():
@@ -166,11 +199,9 @@ def ask():
         user_location = data.get('user_location')
         reservation_details = data.get('reservation_details', {})
 
-        # Detect known locations in the message
         matched_locations = find_known_locations(message)
         distance_info = ""
 
-        # If more than one location mentioned, calculate and add distances
         if len(matched_locations) > 1:
             loc_names = list(matched_locations.keys())
             for i in range(len(loc_names)):
@@ -180,7 +211,6 @@ def ask():
                     dist = get_distance(matched_locations[loc1], matched_locations[loc2])
                     distance_info += f"📍 Distance from **{loc1}** to **{loc2}** is approximately **{dist} miles**.\n"
 
-        # Inject distances into the prompt
         prompt = generate_contextual_prompt(message, user_location, reservation_details)
         if distance_info:
             prompt += f"\n\nLocation Insights:\n{distance_info}"
@@ -200,8 +230,6 @@ def ask():
             "response": "An error occurred while processing your request.",
             "status": "error"
         }), 500
-
-# --- MAIN ---
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5555)
