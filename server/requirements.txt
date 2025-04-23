@@ -1,6 +1,6 @@
 Flask
 Flask-Cors
-openai
+openai==0.28.1
 python-dotenv
 markdown2
 requests
