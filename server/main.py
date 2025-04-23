@@ -2,7 +2,7 @@ import os
 import logging
 import openai
 import re
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 from weather import WeatherService
@@ -148,7 +148,7 @@ def serve_react():
 @app.errorhandler(404)
 def not_found(e):
     return send_from_directory(app.static_folder, 'index.html')
-    
+
 @app.route('/ask', methods=['POST'])
 def ask():
     try:
