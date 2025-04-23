@@ -61,3 +61,30 @@ class TrafficService:
             f"- Estimated time (with traffic): {data['duration_in_traffic']}\n"
             f"- Route: {data['route_summary']}"
         )
+
+    
+    def get_route_stops(origin, destination, api_key, max_stops=5):
+        url = "https://maps.googleapis.com/maps/api/directions/json"
+        params = {
+            "origin": origin,
+            "destination": destination,
+            "key": api_key
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if data['status'] != 'OK':
+            return []
+
+        steps = data['routes'][0]['legs'][0]['steps']
+        total_steps = len(steps)
+        interval = max(1, total_steps // max_stops)
+        
+        waypoints = []
+        for i in range(0, total_steps, interval):
+            loc = steps[i]['end_location']
+            # Reverse geocode or format coordinates
+            waypoint = f"{loc['lat']},{loc['lng']}"
+            waypoints.append(waypoint)
+
+        return waypoints

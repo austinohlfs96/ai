@@ -95,14 +95,11 @@ class WeatherService:
         )
 
     def get_weather_along_route(self, locations):
-        """
-        Get weather information for multiple locations along a route
-        """
         weather_details = []
         for loc in locations:
             weather = self.fetch_weather(loc)
             formatted = self.format_weather_info(weather, loc)
-            weather_details.append(formatted)
+            weather_details.append(f"📍 **{loc}**\n{formatted}")
         return "\n\n".join(weather_details)
 
     def _format_unix_time(self, timestamp):

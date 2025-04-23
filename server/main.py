@@ -81,10 +81,19 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
         if reservation_date:
             location_info += f"Reservation date: {reservation_date}\n"
 
-    # Route weather
+   # Route-based weather
     if "route" in user_question.lower() or "travel" in user_question.lower():
-        stops = ["Parker", "Idaho Springs", "Silverthorne", "Vail"]
-        weather_info += f"\nRoute Weather:\n{weather_service.get_weather_along_route(stops)}"
+        origin, destination = extract_origin_destination(user_question)
+        if not origin and user_location and reservation_details.get('destination'):
+            origin = user_location
+            destination = reservation_details['destination']
+
+        if origin and destination:
+            dynamic_stops = get_route_stops(origin, destination, maps_api_key)
+            if dynamic_stops:
+                weather_info += f"\n🌤️ Route Weather:\n{weather_service.get_weather_along_route(dynamic_stops)}"
+            else:
+                weather_info += f"\n⚠️ Couldn't get route weather from {origin} to {destination}."
 
     # Traffic extraction via regex
     origin, destination = extract_origin_destination(user_question)
