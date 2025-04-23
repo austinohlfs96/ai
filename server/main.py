@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 load_dotenv()
 weather_api_key = os.getenv('WEATHER_API_KEY')
 maps_api_key = os.getenv('GOOGLE_MAPS_API_KEY')
-openai.api_key = os.getenv('OPENAI_API_KEY')
+openai.api_key = os.getenv('key')
 
 # Initialize services
 weather_service = WeatherService(weather_api_key)
