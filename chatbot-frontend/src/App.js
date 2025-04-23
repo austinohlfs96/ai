@@ -41,7 +41,7 @@ function App() {
           borderRadius: '1rem',
           textAlign: 'center'
         }}>
-          <h1 style={{ fontSize: '2.5rem', margin: 0 }}>Ask SpotSurfer</h1>
+          <h1 style={{ fontSize: '2.5rem', margin: 0 }}>Ask SpotSurfer Ai</h1>
           <p style={{ fontSize: '1.2rem', marginTop: '0.5rem' }}>Your local expert for Vail & Beaver Creek parking</p>
         </div>
       </div>
