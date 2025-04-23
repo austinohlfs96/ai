@@ -1,4 +1,6 @@
 Flask
-gunicorn
-flask-cors
+Flask-Cors
 openai
+python-dotenv
+markdown2
+requests

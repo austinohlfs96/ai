@@ -10,7 +10,7 @@ function App() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5555/ask', {
+      const res = await fetch('https://13e7bd70ac66.ngrok.app/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input })

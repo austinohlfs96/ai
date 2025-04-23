@@ -24,7 +24,7 @@ weather_service = WeatherService(weather_api_key)
 traffic_service = TrafficService(maps_api_key)
 
 # Flask setup
-app = Flask(__name__)
+app = Flask(__name__, static_folder="client_build", static_url_path="/")
 CORS(app)
 
 # Load knowledge base
@@ -140,6 +140,15 @@ def query_contextual_response(prompt):
         return "⚠️ Sorry, I couldn't get the information right now. Please try again shortly."
 
 # --- ROUTE ---
+
+@app.route('/')
+def serve_react():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.errorhandler(404)
+def not_found(e):
+    return send_from_directory(app.static_folder, 'index.html')
+    
 @app.route('/ask', methods=['POST'])
 def ask():
     try:
