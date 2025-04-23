@@ -1,5 +1,5 @@
 Spotsurfer  Current Lot Information:
-Arrabelle Valet
+Arrabelle Valet:
   Price:$60/day no hourly no overnight
   Address: 675 LionsHead Pl Vail, CO 81657
   Amenities: Restrooms, Coffee/Tea/Cocoa, Free WiFi, Ski Valet
@@ -13,7 +13,7 @@ Arrabelle Valet
   NearbyShops: Chater sports, Oakely, Vail sports, Christy sports, Rocket Fizz, Patagonia, Avalon Clothing
   NearbySkiSchool:Lionshead Ski School and Ticket office
 
-The Hythe
+The Hythe:
   Price:$72/day no hourly no overnight
   Address: 715 W Lionshead Cir, Vail, CO 81657
   Amenities: Restrooms, Free WiFi, Ski Valet
