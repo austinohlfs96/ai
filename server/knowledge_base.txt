@@ -27,7 +27,7 @@ The Hythe:
   NearbyShops: Chater sports, Oakely, Vail sports, Christy sports, Rocket Fizz, Patagonia, Avalon Clothing
   NearbySkiSchool:Lionshead Ski School and Ticket office
 
-The Park Hyatt
+The Park Hyatt:
   Price:$100/day no hourly no overnight
   Address: 715 W Lionshead Cir, Vail, CO 81657
   Amenities: Restrooms, Free WiFi, Ski Valet
