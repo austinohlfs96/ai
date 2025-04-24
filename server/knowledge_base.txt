@@ -513,89 +513,130 @@ Support Hours: 7:00 AM – 7:00 PM MST Daily
 Response times may vary during peak periods.
 
 
-🏔️ Vail & Beaver Creek Resort Operations Guide
-🎿 Winter 2024–2025 Ski Season
-Vail Mountain
-
-Opening Day: November 15, 2024
-
-Closing Day: April 20, 2025 ​
-Uncover Colorado
-
-Beaver Creek
-
-Opening Day: November 27, 2024
-
-Closing Day: April 13, 2025 ​
-
-
-🚡 Winter Lift & Gondola Hours
-Vail Mountain
-
-Eagle Bahn Gondola (#19): 8:30 AM – 4:00 PM
-
-Avanti Express (#2): 8:30 AM – 4:00 PM
-
-Riva Bahn Express (#6): 8:30 AM – 2:30 PM
-
-Gondola One (#1): Closed for the season 
-Vail
-​
-
-Beaver Creek
-
-Centennial Express: 8:30 AM – 4:00 PM
-
-Haymeadow Express Gondola: 8:30 AM – 4:00 PM
-
-Cinch Express: 8:30 AM – 3:30 PM
-
-Birds of Prey Express: 8:30 AM – 3:30 PM
-
-Rose Bowl Express: 8:30 AM – 3:00 PM
-
-McCoy Park Express: 8:30 AM – 3:00 PM
-
-Strawberry Park Express: 8:30 AM – 4:00 PM
-
-Other lifts: Generally operate between 8:30 AM and 3:30 PM 
-
-​
-
-☀️ Summer 2025 Operations
-Vail Mountain
-
-Gondola One (#1) & Eagle Bahn Gondola (#19):
-
-Daily Operation: 9:30 AM – 4:00 PM, June – September 2
-
-Weekends Only: 9:30 AM – 4:00 PM, September 6 – 29 
-
-​
-
-Beaver Creek
-
-Centennial Express Lift:
-
-Daily Operation: 9:30 AM – 4:30 PM, June 15 – September 2
-
-Weekends Only: 9:30 AM – 4:30 PM, September 7 – 29 
-
-
-Event Name | Dates | Location | Details
-GoPro Mountain Games | June 5–8 | Vail Village | Adventure sports, art, music, and free concerts 
-Vail America Days | July 4 | Vail Village | Parade at 10 AM, patriotic concert at 2 PM, fireworks at 9:45 PM 
-Salute to the USA | July 3 | Avon (Nottingham Park) | Family activities, live music, and one of Colorado's largest fireworks displays 
-Bravo! Vail Music Festival | June 19 – July 31 | Vail | Classical music performances featuring renowned orchestras 
-
-Event Name | Dates | Location | Details
-Vail Farmers' Market & Art Show | Sundays, June 15 – October 5 | Vail Village | Over 150 tents featuring local produce, art, and food 
-Meadow Market | Thursdays, June 19 – September 18 | Vail Village | Smaller market with local vendors and artisans 
-
-Holiday | Dates | Notes
-Memorial Day Weekend | May 24–26 | Start of the summer season; expect increased visitors
-Independence Day | July 4 | Major events in Vail and Avon; high visitor turnout
-Labor Day Weekend | August 30 – September 1 | End of the summer season; popular for last-minute getaways
-
-School District | Summer Break Dates | Notes
-Eagle County School District | June 2 – August 15 | Dates approximate; check with the district for exact dates 
+{
+  "winter_ski_season": {
+    "vail_mountain": {
+      "opening_day": "2024-11-15",
+      "closing_day": "2025-04-20"
+    },
+    "beaver_creek": {
+      "opening_day": "2024-11-27",
+      "closing_day": "2025-04-13"
+    }
+  },
+  "winter_lift_hours": {
+    "vail_mountain": {
+      "eagle_bahn_gondola": "08:30-16:00",
+      "avanti_express": "08:30-16:00",
+      "riva_bahn_express": "08:30-14:30",
+      "gondola_one": "closed"
+    },
+    "beaver_creek": {
+      "centennial_express": "08:30-16:00",
+      "haymeadow_express": "08:30-16:00",
+      "cinch_express": "08:30-15:30",
+      "birds_of_prey_express": "08:30-15:30",
+      "rose_bowl_express": "08:30-15:00",
+      "mccoy_park_express": "08:30-15:00",
+      "strawberry_park_express": "08:30-16:00",
+      "other_lifts": "08:30-15:30"
+    }
+  },
+  "summer_operations": {
+    "vail_mountain": {
+      "daily_operation": {
+        "start_date": "2025-06-01",
+        "end_date": "2025-09-02",
+        "hours": "09:30-16:00"
+      },
+      "weekends_only": {
+        "start_date": "2025-09-06",
+        "end_date": "2025-09-29",
+        "hours": "09:30-16:00"
+      }
+    },
+    "beaver_creek": {
+      "daily_operation": {
+        "start_date": "2025-06-15",
+        "end_date": "2025-09-02",
+        "hours": "09:30-16:30"
+      },
+      "weekends_only": {
+        "start_date": "2025-09-07",
+        "end_date": "2025-09-29",
+        "hours": "09:30-16:30"
+      }
+    }
+  },
+  "events": [
+    {
+      "name": "GoPro Mountain Games",
+      "start_date": "2025-06-05",
+      "end_date": "2025-06-08",
+      "location": "Vail Village",
+      "details": "Adventure sports, art, music, and free concerts"
+    },
+    {
+      "name": "Vail America Days",
+      "start_date": "2025-07-04",
+      "location": "Vail Village",
+      "details": "Parade at 10 AM, patriotic concert at 2 PM, fireworks at 9:45 PM"
+    },
+    {
+      "name": "Salute to the USA",
+      "start_date": "2025-07-03",
+      "location": "Avon (Nottingham Park)",
+      "details": "Family activities, live music, and one of Colorado's largest fireworks displays"
+    },
+    {
+      "name": "Bravo! Vail Music Festival",
+      "start_date": "2025-06-19",
+      "end_date": "2025-07-31",
+      "location": "Vail",
+      "details": "Classical music performances featuring renowned orchestras"
+    },
+    {
+      "name": "Vail Farmers' Market & Art Show",
+      "start_date": "2025-06-15",
+      "end_date": "2025-10-05",
+      "recurring_day": "Sunday",
+      "location": "Vail Village",
+      "details": "Over 150 tents featuring local produce, art, and food"
+    },
+    {
+      "name": "Meadow Market",
+      "start_date": "2025-06-19",
+      "end_date": "2025-09-18",
+      "recurring_day": "Thursday",
+      "location": "Vail Village",
+      "details": "Smaller market with local vendors and artisans"
+    }
+  ],
+  "holidays": [
+    {
+      "name": "Memorial Day Weekend",
+      "start_date": "2025-05-24",
+      "end_date": "2025-05-26",
+      "notes": "Start of the summer season; expect increased visitors"
+    },
+    {
+      "name": "Independence Day",
+      "start_date": "2025-07-04",
+      "notes": "Major events in Vail and Avon; high visitor turnout"
+    },
+    {
+      "name": "Labor Day Weekend",
+      "start_date": "2025-08-30",
+      "end_date": "2025-09-01",
+      "notes": "End of the summer season; popular for last-minute getaways"
+    }
+  ],
+  "school_breaks": [
+    {
+      "district": "Eagle County School District",
+      "start_date": "2025-06-02",
+      "end_date": "2025-08-15",
+      "notes": "Dates approximate; check with the district for exact dates"
+    }
+  ]
+}
