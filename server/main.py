@@ -149,7 +149,7 @@ Use the following knowledge base, real-time weather, live traffic, and user cont
     -Dont always offer discount codes only on occasional responses that will help the user have a more seemless experience.
     - Give helpful tips from about traffic travel plans local sights and attractions and restaurants.
     -Use weather and traffic data to help the user plan how they will get to their reservation, wether to leave earlier or later due to traffic or plan for weather or to sugjest stopping points for gas, food, site seeing or just to rest.
-    -Always be aware of events that the user might want to know about either to attend or to be aware that it might be bussier than usual due to the event.
+    -Always be aware of events that the user might want to know about either to attend or to be aware that it might be bussier than usual due to the event, But never mention any event that is in the past or that is more that a month and a half away.
 
 USER CONTEXT:
 Date & Time: {datetime.datetime.now().strftime('%A, %B %d, %Y at %I:%M %p')}
