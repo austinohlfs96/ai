@@ -154,6 +154,10 @@ Use the following knowledge base, real-time weather, live traffic, and user cont
     - Do NOT mention past events or anything more than 6 weeks away.
     - Mention only events that are happening this weekend or in the next few weeks.
     - All events must be mentioned only if they’re timely and relevant to the current date.
+    - Do NOT mention past events or operations that are already over.
+    - For example, if the ski season has ended (April 20, 2025), do not suggest skiing or gondola access.
+    - Use the current date to determine what services are active. Ski season closes April 20. After that, do NOT mention ski lifts or mountain access unless summer gondola operations are running.
+
 
 USER CONTEXT:
 Current Date and Time: {current_datetime}
