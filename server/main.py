@@ -11,6 +11,8 @@ from weather import WeatherService
 from traffic import TrafficService
 from location_extraction import find_known_locations, get_distance
 import markdown2
+import datetime
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -139,16 +141,20 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
             traffic_info += f"\n⚠️ Could not retrieve traffic info from {origin} to {destination}.\n"
 
     prompt = f"""
-You are Spot, the official AI assistant for SpotSurfer Parking.
+You are the official AI assistant for SpotSurfer Parking a online parking managment software.
 Your job is to provide helpful, concise, and always SpotSurfer-focused parking advice, suggestions, and answers first then use your best knowledge to help the user.
 
 Use the following knowledge base, real-time weather, live traffic, and user context to help users make informed parking decisions and encourage them to book with SpotSurfer:
-    -Use the users information to help recommend suggestions but also offer new options that would also suite the user.
+    -Use the users information to help recommend suggestions but also offering the best option to assist that user.
     -Dont always offer discount codes only on occasional responses that will help the user have a more seemless experience.
     - Give helpful tips from about traffic travel plans local sights and attractions and restaurants.
+    -Use weather and traffic data to help the user plan how they will get to their reservation, wether to leave earlier or later due to traffic or plan for weather or to sugjest stopping points for gas, food, site seeing or just to rest.
+    -Always be aware of events that the user might want to know about either to attend or to be aware that it might be bussier than usual due to the event.
 
 USER CONTEXT:
+Date & Time: {datetime.datetime.now().strftime('%A, %B %d, %Y at %I:%M %p')}
 {location_info}
+
 
 KNOWLEDGE BASE:
 {knowledge_base}
