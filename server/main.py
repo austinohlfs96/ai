@@ -140,6 +140,8 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
         else:
             traffic_info += f"\n⚠️ Could not retrieve traffic info from {origin} to {destination}.\n"
 
+    current_datetime = datetime.datetime.now().strftime('%A, %B %d, %Y at %I:%M %p')
+
     prompt = f"""
 You are the official AI assistant for SpotSurfer Parking a online parking managment software.
 Your job is to provide helpful, concise, and always SpotSurfer-focused parking advice, suggestions, and answers first then use your best knowledge to help the user.
@@ -152,7 +154,7 @@ Use the following knowledge base, real-time weather, live traffic, and user cont
     -Always be aware of events that the user might want to know about either to attend or to be aware that it might be bussier than usual due to the event, But never mention any event that is in the past or that is more that a month and a half away.
 
 USER CONTEXT:
-Date & Time: {datetime.datetime.now().strftime('%A, %B %d, %Y at %I:%M %p')}
+Current Date and Time: {current_datetime}
 {location_info}
 
 
