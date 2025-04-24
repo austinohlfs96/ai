@@ -1,5 +1,7 @@
 Spotsurfer  Current Lot Information:
 Arrabelle Valet:
+  FurthestRes: 90 days out
+  Spots: 20
   Price:$60/day no hourly no overnight
   Address: 675 LionsHead Pl Vail, CO 81657
   Amenities: Restrooms, Coffee/Tea/Cocoa, Free WiFi, Ski Valet
@@ -15,6 +17,7 @@ Arrabelle Valet:
 
 The Hythe:
   Price:$72/day no hourly no overnight
+  TotalsSpots:10
   Address: 715 W Lionshead Cir, Vail, CO 81657
   Amenities: Restrooms, Free WiFi, Ski Valet
   PaidAmenities: Locker Storage for items like bags skis bikes golf clubs ext.
@@ -29,6 +32,7 @@ The Hythe:
 
 The Park Hyatt:
   Price:$100/day no hourly no overnight
+  TotalSpots: 10
   Address: 715 W Lionshead Cir, Vail, CO 81657
   Amenities: Restrooms, Free WiFi, Ski Valet
   PaidAmenities: Locker Storage for items like bags skis bikes golf clubs ext.
@@ -43,6 +47,7 @@ The Park Hyatt:
 
 BlueBird Ski Lockers - $70/day - ski lockers available - at avon station bus stop/across from weston gondola - no overnight
   Price:$70/day no hourly no overnight
+  TotalSpots: 4
   Address: 137 Benchmark Road Suite C 103A, Avon, CO 81620
   Amenities: Restrooms
   PaidAmenities: Ski Lockers
@@ -56,6 +61,7 @@ BlueBird Ski Lockers - $70/day - ski lockers available - at avon station bus sto
 
 Vail Mountian School - $25/day - at booth falls trailhead - at bus stop - no overnight
   Price:$25/day no hourly no overnight
+  TotalSpots: 32 during school year only open weekends - 82 in summer
   Address: 3000 Booth Falls Road, Vail, CO 81657
   Amenities: Nearby bus and hiking trails
   PaidAmenities: N/A
@@ -68,8 +74,9 @@ Vail Mountian School - $25/day - at booth falls trailhead - at bus stop - no ove
   NearbyShops: N/A Not close to lifts but close to bus
   NearbySkiSchool: N/A Not close to lifts but close to bus
 
-Vail Run Resort - $80/day
-  Price:$80/day no hourly no overnight
+Vail Run Resort - $80/day Covered - $60/day uncovered
+  Price:$60to$80day no hourly no overnight
+  TotalSpots: 10 covered - 10 uncovered
   Address: 1000 Lions Ridge Loop, Vail, CO 81657
   Amenities: Restrooms - Village Shuttle - Free WiFi - Near Bus Stop - Bike Parking - 10% off @ Local Joe's Pizza
   ParkingInstructions: Coming off Vail pass, take the main Vail exit. At the round about, proceed on North Frontage Rd West. Take a right on Lions Ridge Loop. Take the first left into the resort. When you arrive you must check in with the attendant inside at the front desk and show them your Spotsurfer reservation. Ask for the $10 coupon (included) for Local Joe's Pizza. Parking is on the lower level of the open lot. Once you are parked, lock your car. Note you may be booted at this location if you do not make a reservation or if you leave your car overnight. This is day parking only. Make your way up to the shuttle, or take the short ride into town on the town bus, located at the entrance to the resort.
@@ -83,6 +90,7 @@ Vail Run Resort - $80/day
 
 63 Willow Place - $50/day - Self Parking - in vail village just steps from gondola one - no overnight
   Price:$50/day no hourly no overnight
+  TotalSpots: 3
   Address: 44 Willow Pl, Vail, CO 81657
   Amenities: N/A
   PaidAmenities: N/A
@@ -126,6 +134,7 @@ Vail Run Resort - $80/day
 
 Evergreen Lodge - $30/day - Self Parking - free breakfast - no overnight
   Price:$30/day no hourly no overnight
+  TotalSpots: 20
   Address: 250 S Frontage Rd W, Vail, CO 81657
   Amenities: Restrooms, Free WiFi, coffee/tea/cocoa, free breakfast, water
   PaidAmenities: N/A
@@ -140,6 +149,7 @@ Evergreen Lodge - $30/day - Self Parking - free breakfast - no overnight
 
 Vail Daily Building - $15/day - Self Parking -  no overnight
   Price:$15/day no hourly no overnight
+  TotalSpots: 10
   Address: 40780 US-6, Avon, CO 81620
   Amenities: Near Bus stop
   PaidAmenities: N/A
@@ -154,6 +164,7 @@ Vail Daily Building - $15/day - Self Parking -  no overnight
 
 Eagle Canopy RV storage - $10/day - Self Parking - overnight - month to month stay
   Price:$10/day yes overnight and month to month
+  TotalSpots: 5
   Address: 645 Lindbergh Dr, Gypsum, CO 81637
   Amenities: N/A
   PaidAmenities: N/A
