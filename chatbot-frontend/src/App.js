@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+
 function App() {
   const [input, setInput] = useState('');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
+  
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -41,7 +43,7 @@ function App() {
           borderRadius: '1rem',
           textAlign: 'center'
         }}>
-          <h1 style={{ fontSize: '2.5rem', margin: 0 }}>Ask SpotSurfer Ai</h1>
+          <h1 style={{ fontSize: '2.5rem', margin: 0 }}>Ask SpotSurfer Ai!</h1>
           {/* <p style={{ fontSize: '1.2rem', marginTop: '0.5rem' }}></p> */}
         </div>
       </div>
@@ -54,7 +56,7 @@ function App() {
           padding: '1rem 1.5rem',
           boxShadow: '0 0 8px rgba(0,0,0,0.08)'
         }}>
-          <h3 style={{ marginTop: 0 }}>Response</h3>
+          <h3 style={{ marginTop: 0 }}>Response:</h3>
           <div style={{ marginTop: '1rem', lineHeight: 1.6 }}>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {response}

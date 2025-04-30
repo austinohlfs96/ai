@@ -1,6 +1,8 @@
 import requests
 import time
 import logging
+import os
+from dotenv import load_dotenv
 
 
 class WeatherService:
@@ -10,12 +12,10 @@ class WeatherService:
         self.units = "imperial"
 
     def fetch_weather(self, location):
-        """
-        Fetch detailed weather information from OpenWeatherMap API
-        """
+        """Fetch detailed weather data for a location (city name, optionally with state)."""
         try:
             params = {
-                'q': location,
+                'q': f"{location},US",  # Add more specificity if needed
                 'appid': self.api_key,
                 'units': self.units
             }
@@ -23,92 +23,80 @@ class WeatherService:
             response.raise_for_status()
             data = response.json()
 
-            # Validate critical fields exist
-            if 'main' not in data or 'weather' not in data or not data['weather']:
-                logging.warning(f"Incomplete weather data for location: {location}")
+            # Early exit if city is not found
+            if data.get("cod") != 200:
+                logging.warning(f"API returned error for {location}: {data.get('message')}")
                 return None
 
-            return {
-                "temperature": {
-                    "current": data['main'].get('temp'),
-                    "feels_like": data['main'].get('feels_like'),
-                    "high": data['main'].get('temp_max'),
-                    "low": data['main'].get('temp_min')
-                },
-                "weather": {
-                    "description": data['weather'][0].get('description', 'No description'),
-                    "main": data['weather'][0].get('main'),
-                    "icon": data['weather'][0].get('icon')
-                },
-                "humidity": data['main'].get('humidity'),
-                "wind": {
-                    "speed": data['wind'].get('speed'),
-                    "direction": data['wind'].get('deg'),
-                    "gust": data['wind'].get('gust')
-                },
-                "clouds": data['clouds'].get('all'),
-                "visibility": data.get('visibility', 0),
-                "pressure": data['main'].get('pressure'),
-                "sun": {
-                    "sunrise": data['sys'].get('sunrise'),
-                    "sunset": data['sys'].get('sunset')
-                },
-                "timezone": data.get('timezone'),
-                "coordinates": {
-                    "lat": data['coord'].get('lat'),
-                    "lon": data['coord'].get('lon')
-                }
-            }
+            return self._parse_weather_data(data)
 
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Weather API request error for '{location}': {e}")
+        except requests.RequestException as e:
+            logging.error(f"API request error for '{location}': {e}")
             return None
         except Exception as e:
-            logging.error(f"Unexpected error fetching weather data for '{location}': {e}")
+            logging.error(f"Unexpected error for '{location}': {e}")
             return None
 
-    def format_weather_info(self, weather_data, location):
-        """
-        Format detailed weather information for display
-        """
-        if not weather_data:
-            return f"⚠️ Weather information for {location} is currently unavailable."
+    def _parse_weather_data(self, data):
+        """Extract and normalize weather data."""
+        try:
+            return {
+                "location": data.get("name"),
+                "temperature": {
+                    "current": data["main"].get("temp"),
+                    "feels_like": data["main"].get("feels_like"),
+                    "high": data["main"].get("temp_max"),
+                    "low": data["main"].get("temp_min")
+                },
+                "weather": data["weather"][0] if data.get("weather") else {},
+                "humidity": data["main"].get("humidity"),
+                "wind": data.get("wind", {}),
+                "clouds": data.get("clouds", {}).get("all"),
+                "visibility": data.get("visibility", 0),
+                "pressure": data["main"].get("pressure"),
+                "sun": data.get("sys", {}),
+                "timezone": data.get("timezone"),
+                "coordinates": data.get("coord", {})
+            }
+        except KeyError as e:
+            logging.warning(f"Missing expected field in API data: {e}")
+            return None
 
-        temp = weather_data['temperature']
-        weather = weather_data['weather']
-        wind = weather_data['wind']
-        sun = weather_data['sun']
+    def format_weather_info(self, weather_data, location_fallback="Unknown"):
+        """Format data for display."""
+        if not weather_data:
+            return f"⚠️ Weather information for {location_fallback} is currently unavailable."
+
+        temp = weather_data["temperature"]
+        weather = weather_data.get("weather", {})
+        wind = weather_data.get("wind", {})
+        sun = weather_data.get("sun", {})
 
         return (
-            f"🌤️ **Weather in {location}:**\n"
-            f"- Temperature: {temp['current']}°F (Feels like {temp['feels_like']}°F)\n"
-            f"- High / Low: {temp['high']}°F / {temp['low']}°F\n"
-            f"- Conditions: {weather['description'].capitalize()} ({weather['main']})\n"
-            f"- Humidity: {weather_data['humidity']}%\n"
-            f"- Wind: {wind['speed']} mph"
-            f"{' from ' + str(wind['direction']) + '°' if wind['direction'] else ''}\n"
-            f"- Cloud cover: {weather_data['clouds']}%\n"
+            f"🌤️ **Weather in {weather_data.get('location', location_fallback)}:**\n"
+            f"- Temperature: {temp.get('current')}°F (Feels like {temp.get('feels_like')}°F)\n"
+            f"- High / Low: {temp.get('high')}°F / {temp.get('low')}°F\n"
+            f"- Conditions: {weather.get('description', 'Unknown').capitalize()} ({weather.get('main', 'N/A')})\n"
+            f"- Humidity: {weather_data.get('humidity')}%\n"
+            f"- Wind: {wind.get('speed', 0)} mph"
+            f"{' from ' + str(wind.get('deg')) + '°' if wind.get('deg') else ''}\n"
+            f"- Cloud cover: {weather_data.get('clouds')}%\n"
             f"- Visibility: {weather_data['visibility'] / 1000:.1f} miles\n"
-            f"- Pressure: {weather_data['pressure']} hPa\n"
-            f"- Sunrise: {self._format_unix_time(sun['sunrise'])}\n"
-            f"- Sunset: {self._format_unix_time(sun['sunset'])}"
+            f"- Pressure: {weather_data.get('pressure')} hPa\n"
+            f"- Sunrise: {self._format_unix_time(sun.get('sunrise'))}\n"
+            f"- Sunset: {self._format_unix_time(sun.get('sunset'))}"
         )
 
-    def get_weather_along_route(self, locations):
-        """
-        Get weather information for multiple locations along a route
-        """
-        weather_details = []
-        for loc in locations:
-            weather = self.fetch_weather(loc)
-            formatted = self.format_weather_info(weather, loc)
-            weather_details.append(formatted)
-        return "\n\n".join(weather_details)
+    def get_weather_for_locations(self, locations):
+        """Get formatted weather info for a list of locations."""
+        output = []
+        for location in locations:
+            data = self.fetch_weather(location)
+            output.append(self.format_weather_info(data, location))
+        return "\n\n".join(output)
 
     def _format_unix_time(self, timestamp):
-        """
-        Convert Unix timestamp to readable local time
-        """
+        """Convert UNIX timestamp to HH:MM AM/PM format."""
         if not timestamp:
             return "Unknown"
         return time.strftime('%I:%M %p', time.localtime(timestamp))
@@ -116,16 +104,21 @@ class WeatherService:
 
 # Example usage
 if __name__ == '__main__':
-    import os
-    from dotenv import load_dotenv
-
     load_dotenv()
-    weather_api_key = os.getenv('WEATHER_API_KEY')
+    api_key = os.getenv("WEATHER_API_KEY")
 
-    if weather_api_key:
-        service = WeatherService(weather_api_key)
-        cities = ["Parker", "Idaho Springs", "Silverthorne", "Vail"]
-        info = service.get_weather_along_route(cities)
-        print(info)
-    else:
+    if not api_key:
         print("❌ WEATHER_API_KEY not found in .env file.")
+    else:
+        service = WeatherService(api_key)
+
+        # Dynamically get input from user
+        user_input = input("Enter a city or multiple cities separated by commas: ")
+        cities = [city.strip() for city in user_input.split(",") if city.strip()]
+
+        if cities:
+            print("\nFetching weather...\n")
+            result = service.get_weather_for_locations(cities)
+            print(result)
+        else:
+            print("⚠️ No valid locations provided.")
