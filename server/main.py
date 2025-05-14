@@ -61,6 +61,18 @@ def reverse_geocode(lat, lng, api_key):
     return f"{lat},{lng}"
 
 # --- UTILITIES ---
+def normalize_location_name(place_name, api_key):
+    try:
+        url = "https://maps.googleapis.com/maps/api/geocode/json"
+        params = {"address": place_name, "key": maps_api_key}
+        response = requests.get(url, params=params)
+        data = response.json()
+        if data['status'] == "OK" and data['results']:
+            return data['results'][0]['formatted_address']
+    except Exception as e:
+        logging.warning(f"Failed to normalize location: {place_name} - {e}")
+    return place_name  # fallback to original if failure
+
 
 def extract_location_from_question(question):
     match = re.search(r'(?:weather\s+(?:in|at|for)?\s*)([a-zA-Z\s]+)', question.lower())
@@ -124,16 +136,21 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
     # --- Origin/Destination Extraction ---
     origin, destination = extract_origin_destination(user_question)
 
-    # Interpret "MY_LOCATION" keyword
+    # Interpret "MY_LOCATION"
     if origin == "MY_LOCATION":
         origin = user_location
 
     # Fallbacks
     if not origin and user_location:
         origin = user_location
-
     if not destination and reservation_details.get("destination"):
         destination = reservation_details["destination"]
+
+    # 🔥 Normalize both origin and destination before using them
+    if origin:
+        origin = normalize_location_name(origin, maps_api_key)
+    if destination:
+        destination = normalize_location_name(destination, maps_api_key)
 
     # --- Route Weather ---
     if origin and destination:
