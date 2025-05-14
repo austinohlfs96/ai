@@ -49,18 +49,17 @@ class TrafficService:
             return None
 
     def format_traffic_info(self, data):
-        """
-        Format traffic info for display or prompt inclusion.
-        """
         if not data:
-            return "Live traffic data is currently unavailable."
+            return "⚠️ Live traffic data is currently unavailable."
 
         return (
-            f"Live traffic from {data['origin']} to {data['destination']}:\n"
-            f"- Distance: {data['distance']}\n"
-            f"- Estimated time (normal): {data['duration']}\n"
-            f"- Estimated time (with traffic): {data['duration_in_traffic']}\n"
-            f"- Route: {data['route_summary']}"
+            f"\n🚗 **Live Traffic Info**\n"
+            f"- **From**: {data['origin']}\n"
+            f"- **To**: {data['destination']}\n"
+            f"- **Distance**: {data['distance']}\n"
+            f"- **Normal Time**: {data['duration']}\n"
+            f"- **Time With Traffic**: {data['duration_in_traffic']}\n"
+            f"- **Route Summary**: {data['route_summary']}\n"
         )
 
     def get_route_stops(self, origin, destination, max_stops=5, reverse_geocode=False):
