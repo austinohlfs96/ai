@@ -62,30 +62,30 @@ def reverse_geocode(lat, lng, api_key):
 
 
 # Get stops along route between origin and destination
-def get_route_stops(origin, destination, api_key, max_stops=4):
-    url = "https://maps.googleapis.com/maps/api/directions/json"
-    params = {
-        "origin": origin,
-        "destination": destination,
-        "key": api_key
-    }
-    response = requests.get(url, params=params)
-    data = response.json()
+# def get_route_stops(origin, destination, api_key, max_stops=4):
+#     url = "https://maps.googleapis.com/maps/api/directions/json"
+#     params = {
+#         "origin": origin,
+#         "destination": destination,
+#         "key": api_key
+#     }
+#     response = requests.get(url, params=params)
+#     data = response.json()
 
-    if data['status'] != 'OK':
-        return []
+#     if data['status'] != 'OK':
+#         return []
 
-    steps = data['routes'][0]['legs'][0]['steps']
-    total_steps = len(steps)
-    interval = max(1, total_steps // max_stops)
+#     steps = data['routes'][0]['legs'][0]['steps']
+#     total_steps = len(steps)
+#     interval = max(1, total_steps // max_stops)
 
-    waypoints = []
-    for i in range(0, total_steps, interval):
-        loc = steps[i]['end_location']
-        waypoint = reverse_geocode(loc['lat'], loc['lng'], api_key)
-        waypoints.append(waypoint)
+#     waypoints = []
+#     for i in range(0, total_steps, interval):
+#         loc = steps[i]['end_location']
+#         waypoint = reverse_geocode(loc['lat'], loc['lng'], api_key)
+#         waypoints.append(waypoint)
 
-    return waypoints
+#     return waypoints
 
 # --- UTILITIES ---
 

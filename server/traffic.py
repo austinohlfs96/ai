@@ -72,6 +72,7 @@ class TrafficService:
             params = {
                 "origin": origin,
                 "destination": destination,
+                "departure_time": "now",  # Add this for traffic-aware routes
                 "key": self.api_key
             }
             response = requests.get(self.base_url, params=params)
