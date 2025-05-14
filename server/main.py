@@ -111,42 +111,63 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
     inferred_location = extract_location_from_question(user_question)
     effective_location = user_location or inferred_location
 
+    # --- Fetch Weather for Effective Location ---
     if effective_location:
-        weather = weather_service.fetch_weather(effective_location)
-        if weather:
-            weather_info += f"\nUser Location Weather:\n{weather_service.format_weather_info(weather, effective_location)}\n"
-        else:
-            weather_info += f"\n⚠️ Weather data not available for {effective_location}.\n"
+        try:
+            weather = weather_service.fetch_weather(effective_location)
+            if weather:
+                weather_info += f"\nUser Location Weather:\n{weather_service.format_weather_info(weather, effective_location)}\n"
+            else:
+                weather_info += f"\n⚠️ Weather data not available for {effective_location}.\n"
+        except Exception as e:
+            logging.warning(f"Weather API error for {effective_location}: {e}")
+            weather_info += f"\n⚠️ Could not fetch weather for {effective_location}.\n"
 
+    # --- Reservation Context ---
     if reservation_details:
         destination = reservation_details.get('destination')
         reservation_date = reservation_details.get('date')
         if destination:
-            res_weather = weather_service.fetch_weather(destination)
-            if res_weather:
-                weather_info += f"\nReservation Location Weather:\n{weather_service.format_weather_info(res_weather, destination)}\n"
+            try:
+                res_weather = weather_service.fetch_weather(destination)
+                if res_weather:
+                    weather_info += f"\nReservation Location Weather:\n{weather_service.format_weather_info(res_weather, destination)}\n"
+            except Exception as e:
+                logging.warning(f"Reservation weather error for {destination}: {e}")
         if reservation_date:
             location_info += f"Reservation date: {reservation_date}\n"
 
+    # --- Origin/Destination Extraction ---
     origin, destination = extract_origin_destination(user_question)
     if not origin and user_location and reservation_details.get('destination'):
         origin = user_location
         destination = reservation_details['destination']
 
+    # --- Route Weather ---
     if origin and destination:
-        stops = traffic_service.get_route_stops(origin, destination, max_stops=4, reverse_geocode=True)
-        if stops:
-            weather_info += f"\n🌤️ Route Weather:\n{weather_service.get_weather_along_route(stops)}"
-        else:
-            weather_info += f"\n⚠️ Couldn't get route weather from {origin} to {destination}."
+        try:
+            stops = traffic_service.get_route_stops(origin, destination, max_stops=4, reverse_geocode=True)
+            if stops:
+                weather_info += f"\n🌤️ Route Weather:\n{weather_service.get_weather_along_route(stops)}"
+            else:
+                weather_info += f"\n⚠️ Couldn't get route weather from {origin} to {destination}."
+        except Exception as e:
+            logging.warning(f"Route weather error from {origin} to {destination}: {e}")
+            weather_info += f"\n⚠️ Error retrieving weather for your route from {origin} to {destination}.\n"
 
+    # --- Live Traffic Info ---
     if origin and destination:
-        traffic_data = traffic_service.get_traffic_summary(origin, destination)
-        if traffic_data:
-            traffic_info += traffic_service.format_traffic_info(traffic_data)
-        else:
-            traffic_info += f"\n⚠️ Could not retrieve traffic info from {origin} to {destination}.\n"
+        try:
+            traffic_data = traffic_service.get_traffic_summary(origin, destination)
+            if traffic_data:
+                traffic_info += traffic_service.format_traffic_info(traffic_data)
+            else:
+                traffic_info += f"\n⚠️ Could not retrieve traffic info from {origin} to {destination}.\n"
+        except Exception as e:
+            logging.warning(f"Traffic API error from {origin} to {destination}: {e}")
+            traffic_info += f"\n⚠️ Error fetching traffic info between {origin} and {destination}.\n"
 
+    # --- Prompt Assembly ---
     current_datetime = datetime.datetime.now().strftime('%A, %B %d, %Y at %I:%M %p')
 
     prompt = f"""
@@ -167,7 +188,6 @@ Use the following knowledge base, real-time weather, live traffic, and user cont
     - For example, if the ski season has ended (April 20, 2025), do not suggest skiing or gondola access.
     - Use the current date to determine what services are active. Ski season closes April 20. After that, do NOT mention ski lifts or mountain access unless summer gondola operations are running.
 
-
 USER CONTEXT:
 Current Date and Time: {current_datetime}
 {location_info}
@@ -184,6 +204,7 @@ User Question:
 Answer:
 """
     return prompt
+
 
 # --- GPT Query ---
 
@@ -254,7 +275,7 @@ def ask():
         })
 
     except Exception as e:
-        logging.error(f"Error in /ask route: {e}")
+        logging.exception(f"Error in /ask route: {e}")  # changed from logging.error to .exception
         return jsonify({
             "response": "An error occurred while processing your request.",
             "status": "error"
