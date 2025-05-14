@@ -41,7 +41,6 @@ def load_knowledge_base():
         return ""
 
 knowledge_base = load_knowledge_base()
-
 def reverse_geocode(lat, lng, api_key):
     try:
         url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={api_key}"
@@ -49,16 +48,24 @@ def reverse_geocode(lat, lng, api_key):
         results = resp.json().get("results", [])
         if results:
             components = results[0]["address_components"]
+            city = None
+            state = None
+
             for comp in components:
                 if "locality" in comp["types"]:
-                    return comp["long_name"]
-                if "administrative_area_level_2" in comp["types"]:
-                    return comp["long_name"]
-            # fallback
-            return results[0]["formatted_address"]
+                    city = comp["long_name"]
+                elif "administrative_area_level_1" in comp["types"]:
+                    state = comp["short_name"]
+
+            if city and state:
+                return f"{city}, {state}"
+            elif results[0].get("formatted_address"):
+                return results[0]["formatted_address"]
     except Exception as e:
         logging.warning(f"Reverse geocoding failed for {lat},{lng}: {e}")
+
     return f"{lat},{lng}"
+
 
 # --- UTILITIES ---
 def normalize_location_name(place_name, api_key):
