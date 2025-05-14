@@ -98,23 +98,18 @@ def extract_location_from_question(question):
 def extract_origin_destination(text):
     text = text.lower()
 
-    # Handle cases like "from my location to vail"
-    if "from my location to" in text:
-        match = re.search(r'from my location to ([a-zA-Z\s]+)', text)
-        if match:
-            return "MY_LOCATION", match.group(1).strip().title()
-
-    # Generic "from X to Y" format
-    match = re.search(r'from ([a-zA-Z\s]+?) to ([a-zA-Z\s]+?)(?:[\.,\?]|$)', text)
+    # Match full "from X to Y"
+    match = re.search(r'from ([^,.?]+?) to ([^,.?]+)', text)
     if match:
         return match.group(1).strip().title(), match.group(2).strip().title()
 
-    # Just destination: "how is traffic to vail"
-    match = re.search(r'to ([a-zA-Z\s]+)', text)
+    # Match just destination
+    match = re.search(r'\bto ([^,.?]+)', text)
     if match:
         return None, match.group(1).strip().title()
 
     return None, None
+
 
 
 # --- PROMPT GENERATOR ---
@@ -219,8 +214,12 @@ Current Date and Time: {current_datetime}
 KNOWLEDGE BASE:
 {knowledge_base}
 
-{weather_info}
+Live Traffic & Road Conditions:
 {traffic_info}
+
+Current & Route Weather:
+{weather_info}
+
 
 User Question:
 {user_question}
