@@ -60,33 +60,6 @@ def reverse_geocode(lat, lng, api_key):
         logging.warning(f"Reverse geocoding failed for {lat},{lng}: {e}")
     return f"{lat},{lng}"
 
-
-# Get stops along route between origin and destination
-# def get_route_stops(origin, destination, api_key, max_stops=4):
-#     url = "https://maps.googleapis.com/maps/api/directions/json"
-#     params = {
-#         "origin": origin,
-#         "destination": destination,
-#         "key": api_key
-#     }
-#     response = requests.get(url, params=params)
-#     data = response.json()
-
-#     if data['status'] != 'OK':
-#         return []
-
-#     steps = data['routes'][0]['legs'][0]['steps']
-#     total_steps = len(steps)
-#     interval = max(1, total_steps // max_stops)
-
-#     waypoints = []
-#     for i in range(0, total_steps, interval):
-#         loc = steps[i]['end_location']
-#         waypoint = reverse_geocode(loc['lat'], loc['lng'], api_key)
-#         waypoints.append(waypoint)
-
-#     return waypoints
-
 # --- UTILITIES ---
 
 def extract_location_from_question(question):
@@ -167,24 +140,26 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
         try:
             stops = traffic_service.get_route_stops(origin, destination, max_stops=4, reverse_geocode=True)
             if stops:
-                weather_info += f"\n🌤️ Route Weather:\n{weather_service.get_weather_along_route(stops)}"
+                weather_info += f"\n\n🌤️ **Route Weather Forecast** (from {origin} to {destination}):\n"
+                weather_info += weather_service.get_weather_along_route(stops)
             else:
                 weather_info += f"\n⚠️ Couldn't get route weather from {origin} to {destination}."
         except Exception as e:
             logging.warning(f"Route weather error from {origin} to {destination}: {e}")
             weather_info += f"\n⚠️ Error retrieving weather for your route from {origin} to {destination}.\n"
 
-    # --- Live Traffic Info ---
-    if origin and destination:
-        try:
-            traffic_data = traffic_service.get_traffic_summary(origin, destination)
-            if traffic_data:
-                traffic_info += traffic_service.format_traffic_info(traffic_data)
-            else:
-                traffic_info += f"\n⚠️ Could not retrieve traffic info from {origin} to {destination}.\n"
-        except Exception as e:
-            logging.warning(f"Traffic API error from {origin} to {destination}: {e}")
-            traffic_info += f"\n⚠️ Error fetching traffic info between {origin} and {destination}.\n"
+# --- Live Traffic Info ---
+        if origin and destination:
+            try:
+                traffic_data = traffic_service.get_traffic_summary(origin, destination)
+                if traffic_data:
+                    traffic_info += f"\n\n🚗 **Live Traffic Update** (from {origin} to {destination}):\n"
+                    traffic_info += traffic_service.format_traffic_info(traffic_data)
+                else:
+                    traffic_info += f"\n⚠️ Could not retrieve traffic info from {origin} to {destination}.\n"
+            except Exception as e:
+                logging.warning(f"Traffic API error from {origin} to {destination}: {e}")
+                traffic_info += f"\n⚠️ Error fetching traffic info between {origin} and {destination}.\n"
 
     # --- Prompt Assembly ---
     current_datetime = datetime.datetime.now().strftime('%A, %B %d, %Y at %I:%M %p')
@@ -214,11 +189,13 @@ Current Date and Time: {current_datetime}
 KNOWLEDGE BASE:
 {knowledge_base}
 
-Live Traffic & Road Conditions:
+--- Real-Time Travel Insights ---
+
+{weather_info}
+
 {traffic_info}
 
-Current & Route Weather:
-{weather_info}
+---
 
 
 User Question:
