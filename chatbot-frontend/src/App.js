@@ -22,6 +22,7 @@ function App() {
   
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
+      console.log(lat, lng);
   
       const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
         method: 'POST',
