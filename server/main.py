@@ -234,6 +234,9 @@ Answer:
 
 def query_contextual_response(prompt):
     try:
+        logging.info("==== GPT PROMPT START ====")
+        logging.info(prompt)
+        logging.info("==== GPT PROMPT END ====")
         response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=[
