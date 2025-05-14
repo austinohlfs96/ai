@@ -96,10 +96,26 @@ def extract_location_from_question(question):
     return None
 
 def extract_origin_destination(text):
-    match = re.search(r'from ([a-zA-Z\s]+?) to ([a-zA-Z\s]+?)(?:[\.,\?]|$)', text.lower())
+    text = text.lower()
+
+    # Handle cases like "from my location to vail"
+    if "from my location to" in text:
+        match = re.search(r'from my location to ([a-zA-Z\s]+)', text)
+        if match:
+            return "MY_LOCATION", match.group(1).strip().title()
+
+    # Generic "from X to Y" format
+    match = re.search(r'from ([a-zA-Z\s]+?) to ([a-zA-Z\s]+?)(?:[\.,\?]|$)', text)
     if match:
         return match.group(1).strip().title(), match.group(2).strip().title()
+
+    # Just destination: "how is traffic to vail"
+    match = re.search(r'to ([a-zA-Z\s]+)', text)
+    if match:
+        return None, match.group(1).strip().title()
+
     return None, None
+
 
 # --- PROMPT GENERATOR ---
 
@@ -139,9 +155,17 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
 
     # --- Origin/Destination Extraction ---
     origin, destination = extract_origin_destination(user_question)
-    if not origin and user_location and reservation_details.get('destination'):
+
+    # Interpret "MY_LOCATION" keyword
+    if origin == "MY_LOCATION":
         origin = user_location
-        destination = reservation_details['destination']
+
+    # Fallbacks
+    if not origin and user_location:
+        origin = user_location
+
+    if not destination and reservation_details.get("destination"):
+        destination = reservation_details["destination"]
 
     # --- Route Weather ---
     if origin and destination:
