@@ -212,7 +212,13 @@ def ask():
         data = request.json
         message = data.get('message', '')
         user_location = data.get('user_location')
+        lat = data.get('lat')
+        lng = data.get('lng')
         reservation_details = data.get('reservation_details', {})
+
+        # Use reverse geocoding if user_location isn't provided
+        if not user_location and lat and lng:
+            user_location = reverse_geocode(lat, lng, maps_api_key)
 
         matched_locations = find_known_locations(message)
         distance_info = ""
@@ -245,6 +251,7 @@ def ask():
             "response": "An error occurred while processing your request.",
             "status": "error"
         }), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5555)
