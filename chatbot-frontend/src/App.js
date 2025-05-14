@@ -12,18 +12,37 @@ function App() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        });
+      });
+  
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+  
       const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input })
+        body: JSON.stringify({
+          message: input,
+          lat,
+          lng
+        })
       });
+  
       const data = await res.json();
       setResponse(data.response || 'No response');
+  
     } catch (error) {
-      setResponse('Error talking to server.');
+      console.error("Location or server error:", error);
+      setResponse('⚠️ Unable to get your location or contact the server.');
     }
     setLoading(false);
   };
+  
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', backgroundColor: '#f9f9f9', minHeight: '100vh', margin: 0 }}>

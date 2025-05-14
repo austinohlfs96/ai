@@ -127,7 +127,7 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
         destination = reservation_details['destination']
 
     if origin and destination:
-        stops = get_route_stops(origin, destination, maps_api_key)
+        stops = traffic_service.get_route_stops(origin, destination, max_stops=4, reverse_geocode=True)
         if stops:
             weather_info += f"\n🌤️ Route Weather:\n{weather_service.get_weather_along_route(stops)}"
         else:
