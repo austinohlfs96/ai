@@ -42,17 +42,24 @@ def load_knowledge_base():
 
 knowledge_base = load_knowledge_base()
 
-# Reverse geocode coordinates to readable city names
 def reverse_geocode(lat, lng, api_key):
     try:
         url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={api_key}"
         resp = requests.get(url)
         results = resp.json().get("results", [])
         if results:
-            return results[0]["address_components"][0]["long_name"]
+            components = results[0]["address_components"]
+            for comp in components:
+                if "locality" in comp["types"]:
+                    return comp["long_name"]
+                if "administrative_area_level_2" in comp["types"]:
+                    return comp["long_name"]
+            # fallback
+            return results[0]["formatted_address"]
     except Exception as e:
         logging.warning(f"Reverse geocoding failed for {lat},{lng}: {e}")
     return f"{lat},{lng}"
+
 
 # Get stops along route between origin and destination
 def get_route_stops(origin, destination, api_key, max_stops=4):
@@ -211,14 +218,15 @@ def ask():
     try:
         data = request.json
         message = data.get('message', '')
+        reservation_details = data.get('reservation_details', {})
         user_location = data.get('user_location')
         lat = data.get('lat')
         lng = data.get('lng')
-        reservation_details = data.get('reservation_details', {})
 
-        # Use reverse geocoding if user_location isn't provided
-        if not user_location and lat and lng:
+        # ⬅️ Use lat/lng to determine user location if not explicitly provided
+        if not user_location and lat is not None and lng is not None:
             user_location = reverse_geocode(lat, lng, maps_api_key)
+            logging.info(f"Resolved user_location from coordinates: {user_location}")
 
         matched_locations = find_known_locations(message)
         distance_info = ""
