@@ -1,5 +1,6 @@
 Spotsurfer  Current Lot Information:
 Arrabelle Valet:
+  reservationLink: https://spotsurfer.com/search?facility=362a86b7-49fe-48a0-98f4-4c299cd677b6
   FurthestRes: 90 days out
   Spots: 20
   Price:$60/day no hourly no overnight
@@ -16,6 +17,7 @@ Arrabelle Valet:
   NearbySkiSchool:Lionshead Ski School and Ticket office
 
 The Hythe:
+  reservationLink: https://spotsurfer.com/search?facility=6b848980-a456-410d-94c2-4a4d667a520c
   Price:$72/day no hourly no overnight
   TotalsSpots:10
   Address: 715 W Lionshead Cir, Vail, CO 81657
@@ -31,6 +33,7 @@ The Hythe:
   NearbySkiSchool:Lionshead Ski School and Ticket office
 
 The Park Hyatt:
+  reservationLink: https://spotsurfer.com/search?facility=646bcd02-7dca-4f4d-8bfc-03675f9edf82
   Price:$100/day no hourly no overnight
   TotalSpots: 10
   Address: 715 W Lionshead Cir, Vail, CO 81657
@@ -46,6 +49,7 @@ The Park Hyatt:
   NearbySkiSchool:Lionshead Ski School and Ticket office
 
 BlueBird Ski Lockers - $70/day - ski lockers available - at avon station bus stop/across from weston gondola - no overnight
+  reservationLink: https://spotsurfer.com/search?facility=242b946e-c93c-4f50-b71c-0f043aeb2776
   Price:$70/day no hourly no overnight
   TotalSpots: 4
   Address: 137 Benchmark Road Suite C 103A, Avon, CO 81620
@@ -60,6 +64,7 @@ BlueBird Ski Lockers - $70/day - ski lockers available - at avon station bus sto
   NearbySkiSchool: Base of Beaver Creek
 
 Vail Mountian School - $25/day - at booth falls trailhead - at bus stop - no overnight
+  reservationLink: https://spotsurfer.com/search?facility=677b3e13-8f9f-4b05-ba1d-14ac6b4e8de6
   Price:$25/day no hourly no overnight
   TotalSpots: 32 during school year only open weekends - 82 in summer
   Address: 3000 Booth Falls Road, Vail, CO 81657
@@ -75,6 +80,7 @@ Vail Mountian School - $25/day - at booth falls trailhead - at bus stop - no ove
   NearbySkiSchool: N/A Not close to lifts but close to bus
 
 Vail Run Resort - $80/day Covered - $60/day uncovered
+  reservationLink: https://spotsurfer.com/search?facility=3194b6ec-0c77-4f1f-9522-ddda98ca9a48
   Price:$60to$80day no hourly no overnight
   TotalSpots: 10 covered - 10 uncovered
   Address: 1000 Lions Ridge Loop, Vail, CO 81657
@@ -89,6 +95,7 @@ Vail Run Resort - $80/day Covered - $60/day uncovered
   NearbySkiSchool: N/A Not close to lifts but close to bus and shuttle
 
 63 Willow Place - $50/day - Self Parking - in vail village just steps from gondola one - no overnight
+  reservationLink: https://spotsurfer.com/search?facility=51749e1c-6d03-403c-9664-70f96ed46d0a
   Price:$50/day no hourly no overnight
   TotalSpots: 3
   Address: 44 Willow Pl, Vail, CO 81657
@@ -133,6 +140,7 @@ Vail Run Resort - $80/day Covered - $60/day uncovered
   NearbySkiSchool:LVail village ticket office no skischool in Vail village
 
 Evergreen Lodge - $30/day - Self Parking - free breakfast - no overnight
+  reservationLink: https://spotsurfer.com/search?facility=1933920a-79e8-4486-a6e7-ad2b2b6bb09f
   Price:$30/day no hourly no overnight
   TotalSpots: 20
   Address: 250 S Frontage Rd W, Vail, CO 81657
@@ -148,6 +156,7 @@ Evergreen Lodge - $30/day - Self Parking - free breakfast - no overnight
   NearbySkiSchool:N/A Not close to lifts but close to bus and shuttle
 
 Vail Daily Building - $15/day - Self Parking -  no overnight
+  reservationLink: https://spotsurfer.com/search?facility=17efac89-56c1-4e6c-81d8-741820301c9a
   Price:$15/day no hourly no overnight
   TotalSpots: 10
   Address: 40780 US-6, Avon, CO 81620
@@ -163,6 +172,7 @@ Vail Daily Building - $15/day - Self Parking -  no overnight
   NearbySkiSchool:N/A Not close to lifts but close to bus and shuttle
 
 Eagle Canopy RV storage - $10/day - Self Parking - overnight - month to month stay
+  reservationLink: https://spotsurfer.com/search?facility=6ff1c37b-0034-4928-b8fb-04e81a5dd6d7
   Price:$10/day yes overnight and month to month
   TotalSpots: 5
   Address: 645 Lindbergh Dr, Gypsum, CO 81637
