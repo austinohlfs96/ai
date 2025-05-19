@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { marked } from 'marked';
 
+// Optional: configure marked
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+  headerIds: false,
+});
 
 function App() {
   const [input, setInput] = useState('');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
-  
 
   const handleSubmit = async () => {
     setLoading(true);
     let lat = null;
     let lng = null;
-  
+
     try {
       const position = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -22,48 +26,45 @@ function App() {
           maximumAge: 0,
         });
       });
-  
+
       lat = position.coords.latitude;
       lng = position.coords.longitude;
       console.log('Location:', lat, lng);
-  
+
     } catch (geoError) {
       console.warn("Geolocation failed:", geoError);
-      
-      // Custom alert for denied location access
+
       const allowFallback = window.confirm(
-        "We couldn’t access your location. You can still use the service, but results may be less accurate.\n\nWould you like to continue without location?"
+        "We couldn’t access your location. To get the best recommendations, please enable location access in your device settings.\n\nYou can also continue without location and manually enter your location in the chat (e.g., 'Where should I park in Vail?').\n\nWould you like to continue without location?"
       );
-  
+
       if (!allowFallback) {
         setLoading(false);
         return;
       }
     }
-  
+
     try {
       const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: input,
-          lat: lat, // could be null
+          lat: lat,
           lng: lng,
         })
       });
-  
+
       const data = await res.json();
       setResponse(data.response || 'No response');
-  
+
     } catch (serverError) {
       console.error("Server error:", serverError);
       setResponse('⚠️ Unable to contact the server.');
     }
-  
+
     setLoading(false);
   };
-  
-  
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', backgroundColor: '#f9f9f9', minHeight: '100vh', margin: 0 }}>
@@ -84,25 +85,23 @@ function App() {
           textAlign: 'center'
         }}>
           <h1 style={{ fontSize: '2.5rem', margin: 0 }}>Ask SpotSurfer Ai!</h1>
-          {/* <p style={{ fontSize: '1.2rem', marginTop: '0.5rem' }}></p> */}
         </div>
       </div>
 
-       {/* Response Section */}
-       <div style={{
-          textAlign: 'left',
-          backgroundColor: 'white',
-          borderRadius: '0.75rem',
-          padding: '1rem 1.5rem',
-          boxShadow: '0 0 8px rgba(0,0,0,0.08)'
-        }}>
-          <h3 style={{ marginTop: 0 }}>Response:</h3>
-          <div style={{ marginTop: '1rem', lineHeight: 1.6 }}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {response}
-            </ReactMarkdown>
-          </div>
-        </div>
+      {/* Response Section */}
+      <div style={{
+        textAlign: 'left',
+        backgroundColor: 'white',
+        borderRadius: '0.75rem',
+        padding: '1rem 1.5rem',
+        boxShadow: '0 0 8px rgba(0,0,0,0.08)'
+      }}>
+        <h3 style={{ marginTop: 0 }}>Response:</h3>
+        <div
+          style={{ marginTop: '1rem', lineHeight: 1.6 }}
+          dangerouslySetInnerHTML={{ __html: marked.parse(response) }}
+        />
+      </div>
 
       {/* Chat Interface */}
       <div style={{ maxWidth: '700px', margin: '2rem auto', padding: '1rem' }}>
@@ -141,8 +140,8 @@ function App() {
           </button>
         </div>
         <p style={{ fontSize: '0.9em', color: '#666' }}>
-  Having trouble? <a href="https://support.google.com/chrome/answer/142065?hl=en" target="_blank" rel="noopener noreferrer">Enable location services</a>.
-</p>
+          Having trouble? <a href="https://support.google.com/chrome/answer/142065?hl=en" target="_blank" rel="noopener noreferrer">Enable location services</a>.
+        </p>
       </div>
     </div>
   );
