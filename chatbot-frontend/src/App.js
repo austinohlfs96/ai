@@ -11,6 +11,9 @@ function App() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    let lat = null;
+    let lng = null;
+  
     try {
       const position = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -20,16 +23,31 @@ function App() {
         });
       });
   
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      console.log(lat, lng);
+      lat = position.coords.latitude;
+      lng = position.coords.longitude;
+      console.log('Location:', lat, lng);
   
+    } catch (geoError) {
+      console.warn("Geolocation failed:", geoError);
+      
+      // Custom alert for denied location access
+      const allowFallback = window.confirm(
+        "We couldn’t access your location. You can still use the service, but results may be less accurate.\n\nWould you like to continue without location?"
+      );
+  
+      if (!allowFallback) {
+        setLoading(false);
+        return;
+      }
+    }
+  
+    try {
       const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: input,
-          lat: lat,
+          lat: lat, // could be null
           lng: lng,
         })
       });
@@ -37,12 +55,14 @@ function App() {
       const data = await res.json();
       setResponse(data.response || 'No response');
   
-    } catch (error) {
-      console.error("Location or server error:", error);
-      setResponse('⚠️ Unable to get your location or contact the server.');
+    } catch (serverError) {
+      console.error("Server error:", serverError);
+      setResponse('⚠️ Unable to contact the server.');
     }
+  
     setLoading(false);
   };
+  
   
 
   return (
@@ -120,8 +140,9 @@ function App() {
             {loading ? 'Loading...' : 'Ask SpotSurfer'}
           </button>
         </div>
-
-       
+        <p style={{ fontSize: '0.9em', color: '#666' }}>
+  Having trouble? <a href="https://support.google.com/chrome/answer/142065?hl=en" target="_blank" rel="noopener noreferrer">Enable location services</a>.
+</p>
       </div>
     </div>
   );
