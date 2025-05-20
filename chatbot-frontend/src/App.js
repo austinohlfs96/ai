@@ -1,7 +1,40 @@
 import React, { useState } from 'react';
 import { marked } from 'marked';
 
-// Optional: configure marked
+const buttonPrimary = {
+  background: 'linear-gradient(90deg, #ff7a00, #ff3c00)',
+  color: '#fff',
+  border: 'none',
+  padding: '0.9rem 1.6rem',
+  fontSize: '1rem',
+  borderRadius: '1rem',
+  cursor: 'pointer',
+  fontWeight: 600,
+  boxShadow: '0 0 20px rgba(255, 122, 0, 0.5)',
+  transition: 'all 0.3s ease',
+  width: '100%'
+};
+
+const buttonSecondary = {
+  background: 'rgba(255,255,255,0.06)',
+  color: '#fff',
+  border: '1px solid rgba(255,255,255,0.2)',
+  padding: '0.7rem 1.2rem',
+  borderRadius: '0.75rem',
+  cursor: 'pointer',
+  fontWeight: 500,
+  backdropFilter: 'blur(10px)',
+  width: '100%',
+  transition: 'all 0.3s ease-in-out'
+};
+
+const buttonDanger = {
+  ...buttonSecondary,
+  background: 'rgba(255, 0, 0, 0.1)',
+  borderColor: '#ff5c5c',
+  color: '#ff5c5c'
+};
+
 marked.setOptions({
   breaks: true,
   gfm: true,
@@ -12,6 +45,53 @@ function App() {
   const [input, setInput] = useState('');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [vttEnabled, setVttEnabled] = useState(true);
+  const [language, setLanguage] = useState('en-US');
+
+  const speakResponse = (text) => {
+    if (ttsEnabled && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      
+      const cleanText = text
+        .replace(/<a [^>]+>(.*?)<\/a>/gi, '$1') 
+        .replace(/<[^>]+>/g, '');              
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = language;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const stopSpeaking = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!vttEnabled || !SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = language;
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.start();
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event);
+    };
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -29,15 +109,8 @@ function App() {
 
       lat = position.coords.latitude;
       lng = position.coords.longitude;
-      console.log('Location:', lat, lng);
-
     } catch (geoError) {
-      console.warn("Geolocation failed:", geoError);
-
-      const allowFallback = window.confirm(
-        "We couldn’t access your location. To get the best recommendations, please enable location access in your device settings.\n\nYou can also continue without location and manually enter your location in the chat (e.g., 'Where should I park in Vail?').\n\nWould you like to continue without location?"
-      );
-
+      const allowFallback = window.confirm("We couldn’t access your location. To get the best recommendations, please enable location access. Would you like to continue without location?");
       if (!allowFallback) {
         setLoading(false);
         return;
@@ -48,16 +121,13 @@ function App() {
       const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: input,
-          lat: lat,
-          lng: lng,
-        })
+        body: JSON.stringify({ message: input, lat, lng, lang: language })
       });
 
       const data = await res.json();
-      setResponse(data.response || 'No response');
-
+      const reply = data.response || 'No response';
+      setResponse(reply);
+      speakResponse(reply);
     } catch (serverError) {
       console.error("Server error:", serverError);
       setResponse('⚠️ Unable to contact the server.');
@@ -66,82 +136,121 @@ function App() {
     setLoading(false);
   };
 
+  const cardStyle = {
+    background: 'linear-gradient(135deg, rgba(40,40,40,0.8), rgba(60,60,60,0.6))',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '1.25rem',
+    backdropFilter: 'blur(12px)',
+    padding: '2rem',
+    boxShadow: '0 12px 35px rgba(0,0,0,0.4)',
+    maxWidth: '90vw',
+    margin: '2rem auto'
+  };
+
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif', backgroundColor: '#f9f9f9', minHeight: '100vh', margin: 0 }}>
-      {/* Hero Section */}
-      <div style={{
-        background: 'url("/vail-bg.jpg") center/cover no-repeat',
-        height: '300px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'relative',
-        color: 'white'
-      }}>
-        <div style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          padding: '2rem',
-          borderRadius: '1rem',
-          textAlign: 'center'
-        }}>
-          <h1 style={{ fontSize: '2.5rem', margin: 0 }}>Ask SpotSurfer Ai!</h1>
-        </div>
+    <div style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #0f0f0f, #121212)', color: '#fff', minHeight: '100vh', paddingBottom: '4rem', position: 'relative' }}>
+      <div style={{ textAlign: 'center', padding: '3rem 1rem 1rem' }}>
+        <h1 style={{ fontSize: 'clamp(2rem, 8vw, 3rem)', fontWeight: 800, background: 'linear-gradient(to right, #ff7a00, #ff3c00)', WebkitBackgroundClip: 'text', color: 'transparent' }}>Ask SpotSurfer AI</h1>
       </div>
 
-      {/* Response Section */}
-      <div style={{
-        textAlign: 'left',
-        backgroundColor: 'white',
-        borderRadius: '0.75rem',
-        padding: '1rem 1.5rem',
-        boxShadow: '0 0 8px rgba(0,0,0,0.08)'
-      }}>
-        <h3 style={{ marginTop: 0 }}>Response:</h3>
-        <div
-          style={{ marginTop: '1rem', lineHeight: 1.6 }}
-          dangerouslySetInnerHTML={{ __html: marked.parse(response) }}
+      <div style={cardStyle}>
+        <h3 style={{ marginTop: 0, fontSize: '1.25rem', fontWeight: 600 }}>Response:</h3>
+        <div style={{ marginTop: '1rem', lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: marked.parse(response) }} />
+        {loading && (
+          <div style={{ fontStyle: 'italic', color: '#aaa', marginTop: '1rem' }}>
+            SpotSurfer is typing<span style={{ animation: 'blink 1.4s infinite steps(1, end)' }}>...</span>
+          </div>
+        )}
+        {response && ttsEnabled && (
+          <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <button onClick={() => speakResponse(response)} style={buttonSecondary}>🔊 Read Aloud Again</button>
+            <button onClick={stopSpeaking} style={buttonDanger}>✋ Stop Reading</button>
+          </div>
+        )}
+      </div>
+
+      <div style={cardStyle}>
+        <label htmlFor="input" style={{ fontWeight: 600, fontSize: '1.05rem', display: 'block', marginBottom: '0.5rem' }}>Ask a question:</label>
+        <textarea
+          id="input"
+          rows="4"
+          placeholder="e.g. Where should I park for the GoPro Games?"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onFocus={(e) => e.target.style.boxShadow = '0 0 12px #ff7a00'}
+          onBlur={(e) => e.target.style.boxShadow = 'inset 0 1px 3px rgba(0,0,0,0.4)'}
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            padding: '1rem',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '0.75rem',
+            fontSize: '1rem',
+            lineHeight: 1.5,
+            resize: 'vertical',
+            outline: 'none',
+            marginBottom: '1.25rem',
+            boxSizing: 'border-box'
+          }}
         />
-      </div>
-
-      {/* Chat Interface */}
-      <div style={{ maxWidth: '700px', margin: '2rem auto', padding: '1rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
-          <label htmlFor="input" style={{ fontWeight: 600, textAlign: 'left' }}>Ask a question:</label>
-          <textarea
-            id="input"
-            rows="4"
-            placeholder="e.g. Where should I park for the GoPro Games?"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            style={{
-              resize: 'vertical',
-              padding: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '0.75rem',
-              fontSize: '1rem'
-            }}
-          />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <button
             onClick={handleSubmit}
             disabled={loading}
-            style={{
-              backgroundColor: '#ff7a00',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              borderRadius: '0.75rem',
-              cursor: 'pointer',
-              transition: 'background-color 0.3s ease',
-              opacity: loading ? 0.7 : 1
-            }}
+            style={{ ...buttonPrimary, opacity: loading ? 0.6 : 1 }}
           >
-            {loading ? 'Loading...' : 'Ask SpotSurfer'}
+            {loading ? 'Loading...' : '🚀 Ask SpotSurfer'}
+          </button>
+          <button
+            onClick={startListening}
+            disabled={!vttEnabled}
+            style={buttonSecondary}
+          >
+            🎤 Speak Your Question
           </button>
         </div>
-        <p style={{ fontSize: '0.9em', color: '#666' }}>
-          Having trouble? <a href="https://support.google.com/chrome/answer/142065?hl=en" target="_blank" rel="noopener noreferrer">Enable location services</a>.
-        </p>
+      </div>
+
+      <div style={{ ...cardStyle, display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.95rem' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input type="checkbox" checked={ttsEnabled} onChange={(e) => setTtsEnabled(e.target.checked)} /> Enable TTS
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input type="checkbox" checked={vttEnabled} onChange={(e) => setVttEnabled(e.target.checked)} /> Enable VTT
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          Language:
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.08)', color: '#fff' }}
+          >
+            <option value="en-US">English</option>
+            <option value="es-ES">Español</option>
+          </select>
+        </label>
+      </div>
+
+      <div style={{
+        position: 'fixed',
+        bottom: '1.5rem',
+        right: '1.5rem',
+        width: '60px',
+        height: '60px',
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #ff3c00, #ff7a00)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '1.5rem',
+        boxShadow: '0 0 15px rgba(255, 122, 0, 0.6)',
+        zIndex: 1000,
+        cursor: 'pointer'
+      }} onClick={startListening}>
+        🎙️
       </div>
     </div>
   );
