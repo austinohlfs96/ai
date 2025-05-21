@@ -43,6 +43,21 @@ marked.setOptions({
   headerIds: false,
 });
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 function App() {
   const [input, setInput] = useState('');
   const [response, setResponse] = useState('');
@@ -61,6 +76,32 @@ function App() {
       navigator.serviceWorker.register('/service-worker.js').then(() =>
         console.log("✅ Service worker registered")
       );
+    }
+  }, []);
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log("✅ Service worker registered");
+  
+          // Subscribe to push notifications
+          return registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array('BM4FjZk0AB2mO2x63aPEa2MNqkzhNY-E1HExxVUYfrCN9uuXTZ_UWXKkjBVjNjwV3Y-b6WkRqP2CWM6WqCa-vuU')
+          });
+        })
+        .then(subscription => {
+          // Send subscription to your server
+          fetch('/subscribe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(subscription)
+          });
+        })
+        .catch(err => console.error('Push subscription failed:', err));
     }
   }, []);
 
