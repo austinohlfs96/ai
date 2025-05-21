@@ -103,55 +103,59 @@ function App() {
   const requestNotificationPermission = async () => {
     try {
       const permission = await Notification.requestPermission();
-
-      if (permission !== 'granted') {
-        alert("Notification permission not granted.");
-        return;
-      }
-
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        });
-      });
-
-      const { latitude, longitude } = position.coords;
-      startCoords.current = { latitude, longitude };
-      setTracking(true);
-
-      new Notification("🛰️ Trip tracking started");
-      setTimeout(() => {
-        new Notification("⏱️ Reminder: SpotSurfer is tracking your trip. Drive safely!", {
+      
+      if (permission === 'granted') {
+        setTracking(true);
+        
+        // Show initial notification
+        const notification = new Notification("🛰️ Trip tracking started", {
           body: "Welcome to your parking area.",
           icon: "/icons/icon-192.png",
-          requireInteraction: true  // ⚠️ Only works on some platforms
+          requireInteraction: true
         });
-      }, 15000);
 
-      const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: "I want to start tracking my trip from this location",
-          lat: latitude,
-          lng: longitude,
-          lang: language,
-          intent: 'trip_start_simple'
-        })
-      });
+        // Set up location tracking
+        navigator.geolocation.getCurrentPosition(async position => {
+          const { latitude, longitude } = position.coords;
+          startCoords.current = { latitude, longitude };
 
-      const data = await res.json();
-      const message = data.response || 'Now tracking your trip.';
-      setResponse(message);
-      speakResponse(message);
-
+          // Send initial location to server
+          await fetch('https://chatbot-j9nx.onrender.com/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: "I want to start tracking my trip from this location",
+              lat: latitude,
+              lng: longitude,
+              lang: language,
+              intent: 'trip_start_simple'
+            })
+          });
+        });
+      } else {
+        alert('Notification permission denied.');
+      }
     } catch (err) {
-      console.error("Trip tracking failed:", err);
-      alert("⚠️ Please add Spotsurfer AI to your home screen to receive trip alerts.");
+      console.error('Error with notifications:', err);
+      alert('Failed to set up notifications. Please try again.');
     }
   };
+
+  // Helper function for VAPID key conversion
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
 
   const speakResponse = (text) => {
     if (ttsEnabled && 'speechSynthesis' in window) {
