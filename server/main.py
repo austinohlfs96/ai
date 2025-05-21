@@ -13,7 +13,6 @@ from location_extraction import find_known_locations, get_distance
 import markdown2
 import datetime
 
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
@@ -198,8 +197,9 @@ Use the following knowledge base, real-time weather, live traffic, and user cont
     - Do NOT mention past events or operations that are already over.
     - For example, if the ski season has ended (April 20, 2025), do not suggest skiing or gondola access.
     - Use the current date to determine what services are active. Ski season closes April 20. After that, do NOT mention ski lifts or mountain access unless summer gondola operations are running.
+    - You can also track a user's trip and proactively alert them when they are near available SpotSurfer parking locations.
 
-USER CONTEXT:
+
 Current Date and Time: {current_datetime}
 {location_info}
 
@@ -259,10 +259,25 @@ def ask():
     try:
         data = request.json
         message = data.get('message', '')
+        intent = data.get('intent')  # new intent support
         reservation_details = data.get('reservation_details', {})
         user_location = data.get('user_location')
         lat = data.get('lat')
         lng = data.get('lng')
+
+        # ✅ simple shortcut response
+        if intent == 'trip_start_simple':
+            # Always resolve user location dynamically
+            user_location = reverse_geocode(lat, lng, maps_api_key)
+            logging.info(f"Reverse-geocoded user location for trip start: {user_location}")
+
+            response_text = f"Now tracking your trip from {user_location or 'your location'}."
+
+            return jsonify({
+                "response": response_text,
+                "html": markdown2.markdown(response_text),
+                "status": "success"
+            })
 
         # ⬅️ Use lat/lng to determine user location if not explicitly provided
         if not user_location and lat is not None and lng is not None:
@@ -295,11 +310,14 @@ def ask():
         })
 
     except Exception as e:
-        logging.exception(f"Error in /ask route: {e}")  # changed from logging.error to .exception
+        logging.exception(f"Error in /ask route: {e}")
         return jsonify({
             "response": "An error occurred while processing your request.",
             "status": "error"
         }), 500
+
+
+
 
 
 if __name__ == '__main__':
