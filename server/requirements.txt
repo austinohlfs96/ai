@@ -5,3 +5,5 @@ python-dotenv
 markdown2
 requests
 gunicorn
+pywebpush
+cryptography
