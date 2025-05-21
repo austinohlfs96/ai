@@ -145,7 +145,7 @@ def generate_contextual_prompt(user_question, user_location=None, reservation_de
     if not destination and reservation_details.get("destination"):
         destination = reservation_details["destination"]
 
-    # 🔥 Normalize both origin and destination before using them
+    # Normalize both origin and destination before using them
     if origin:
         origin = normalize_location_name(origin, maps_api_key)
     if destination:
@@ -265,7 +265,7 @@ def ask():
         lat = data.get('lat')
         lng = data.get('lng')
 
-        # ✅ simple shortcut response
+        # simple shortcut response
         if intent == 'trip_start_simple':
             # Always resolve user location dynamically
             user_location = reverse_geocode(lat, lng, maps_api_key)
@@ -279,7 +279,7 @@ def ask():
                 "status": "success"
             })
 
-        # ⬅️ Use lat/lng to determine user location if not explicitly provided
+        # Use lat/lng to determine user location if not explicitly provided
         if not user_location and lat is not None and lng is not None:
             user_location = reverse_geocode(lat, lng, maps_api_key)
             logging.info(f"Resolved user_location from coordinates: {user_location}")
