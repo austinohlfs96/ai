@@ -11,23 +11,25 @@ self.addEventListener('activate', event => {
   event.waitUntil(self.clients.claim());
 });
 
-// Handle Push Notifications from backend
+// Handle push events from backend
 self.addEventListener('push', event => {
+  console.log('[SW] 🚀 Push event received');
+
   let data = {};
   try {
-    data = event.data.json();
+    data = event.data ? event.data.json() : {};
+    console.log('[SW] Push payload:', data);
   } catch (e) {
-    console.error('Push event error:', e);
+    console.error('[SW] ❌ Error parsing push payload:', e);
   }
 
   const options = {
-    body: data.body || 'New update from SpotSurfer',
+    body: data.body || '📡 New update from SpotSurfer',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
-    tag: 'push-notification',
     requireInteraction: true,
     data: {
-      url: '/',
+      url: data.url || '/',
       ...data
     },
     actions: [
@@ -37,11 +39,38 @@ self.addEventListener('push', event => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || '📍 SpotSurfer Update', options)
+    self.registration.showNotification(data.title || '📍 SpotSurfer Alert', options)
   );
 });
 
-// Show Notification (from postMessage)
+// Handle notification clicks
+self.addEventListener('notificationclick', event => {
+  console.log('[SW] Notification click:', event.action);
+  event.notification.close();
+
+  if (event.action === 'stop') {
+    trackingActive = false;
+
+    event.waitUntil(
+      self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
+        clients.forEach(client => {
+          client.postMessage({ type: 'stop-tracking' });
+        });
+      })
+    );
+    return;
+  }
+
+  // Handle default or "view" action
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      const client = clients.find(c => 'focus' in c && c.url.includes('/'));
+      return client ? client.focus() : self.clients.openWindow('/');
+    })
+  );
+});
+
+// Handle manual notification via postMessage
 const showNotification = (title, body) => {
   const options = {
     body,
@@ -55,7 +84,7 @@ const showNotification = (title, body) => {
   self.registration.showNotification(title, options);
 };
 
-// Listen to messages from client
+// Listen for messages from client
 self.addEventListener('message', event => {
   const data = event.data;
 
@@ -74,7 +103,7 @@ self.addEventListener('message', event => {
   }
 });
 
-// Optional: Background Sync (works only in supported browsers)
+// Optional: Background Sync (where supported)
 self.addEventListener('sync', event => {
   if (event.tag === 'tracking-sync' && trackingActive) {
     event.waitUntil(
@@ -90,30 +119,4 @@ self.addEventListener('periodicsync', event => {
       showNotification("📡 Tracking Active", "Your location is still updating in the background.")
     );
   }
-});
-
-// Handle clicks on notifications
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-
-  if (event.action === 'stop') {
-    trackingActive = false;
-
-    event.waitUntil(
-      self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
-        clients.forEach(client => {
-          client.postMessage({ type: 'stop-tracking' });
-        });
-      })
-    );
-    return;
-  }
-
-  // "view" or default click behavior
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-      const client = clients.find(c => c.url.includes('/') && 'focus' in c);
-      return client ? client.focus() : self.clients.openWindow('/');
-    })
-  );
 });

@@ -81,29 +81,43 @@ function App() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(registration => {
-          console.log("✅ Service worker registered");
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('✅ Service Worker registered with scope:', registration.scope);
   
-          // Subscribe to push notifications
-          return registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array('BEPKSQoNHf4C17Wm2xFKnGN8MGPElaegcTESiKlRDkidbDEHU2X4XW61yO8Sk3NjDj57ursrAw7Cc1YEXKSHNKU')
-          });
-        })
-        .then(subscription => {
-          // Send subscription to your server
-          fetch('/subscribe', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(subscription)
-          });
-        })
-        .catch(err => console.error('Push subscription failed:', err));
+            // Check if already subscribed
+            return registration.pushManager.getSubscription().then(async existingSub => {
+              if (existingSub) {
+                console.log('🔁 Already subscribed to push.');
+                return existingSub;
+              }
+  
+              // Subscribe to push
+              return registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(
+                  'BEPKSQoNHf4C17Wm2xFKnGN8MGPElaegcTESiKlRDkidbDEHU2X4XW61yO8Sk3NjDj57ursrAw7Cc1YEXKSHNKU'
+                )
+              });
+            });
+          })
+          .then(subscription => {
+            console.log('📨 Push subscription:', subscription);
+            // Send to server
+            return fetch('/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(subscription)
+            });
+          })
+          .catch(err => console.error('❌ Service worker or push setup failed:', err));
+      });
+    } else {
+      console.warn('🛑 Service Workers or PushManager not supported in this browser.');
     }
   }, []);
+  
 
   useEffect(() => {
     if (tracking) {
