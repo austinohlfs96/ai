@@ -80,6 +80,19 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          console.log('✅ Notification permission granted');
+          // You can now subscribe the user to push notifications
+        } else {
+          console.warn('❌ Notification permission denied');
+        }
+      });
+    }
+  }, []);
+
+  useEffect(() => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
