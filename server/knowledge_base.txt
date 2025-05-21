@@ -602,6 +602,20 @@ Response times may vary during peak periods.
       "details": "Adventure sports, art, music, and free concerts"
     },
     {
+      "name": "Beaver Creeks Blues, Brews, and BBQs",
+      "start_date": "2025-05-24",
+      "end_date": "2025-05-26",
+      "location": "Beaver Creek",
+      "details": "Blues music, craft beers, and barbecue. Memorial Day Weekend"
+    },
+    {
+      "name": "Vail Spring Bluegrass Festival",
+      "start_date": "2025-06-05",
+      "end_date": "2025-06-08",
+      "location": "Vail Village",
+      "details": "Free Spring Bluegrass Festaval in Vail Memorial Day Weekend"
+    },
+    {
       "name": "Vail America Days",
       "start_date": "2025-07-04",
       "location": "Vail Village",

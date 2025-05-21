@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { marked } from 'marked';
 
 const buttonPrimary = {
@@ -48,14 +48,98 @@ function App() {
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [vttEnabled, setVttEnabled] = useState(true);
   const [language, setLanguage] = useState('en-US');
+  const [tracking, setTracking] = useState(false);
+
+  const startCoords = useRef(null);
+  const destinationReached = useRef(false);
+  const returnNotified = useRef(false);
+
+  useEffect(() => {
+    if (tracking) {
+      const interval = setInterval(() => {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const { latitude, longitude } = pos.coords;
+
+          if (!startCoords.current) {
+            startCoords.current = { latitude, longitude };
+            return;
+          }
+
+          const dist = (a, b) => Math.sqrt(
+            Math.pow(a.latitude - b.latitude, 2) +
+            Math.pow(a.longitude - b.longitude, 2)
+          );
+
+          const distance = dist(startCoords.current, { latitude, longitude });
+
+          if (!destinationReached.current && distance > 0.005) {
+            destinationReached.current = true;
+            new Notification("📍 You’ve reached your destination zone.");
+          }
+
+          if (destinationReached.current && !returnNotified.current && distance < 0.002) {
+            returnNotified.current = true;
+            new Notification("🏠 Welcome back to your starting point.");
+            setTracking(false);
+          }
+        });
+      }, 10000);
+
+      return () => clearInterval(interval);
+    }
+  }, [tracking]);
+
+  const requestNotificationPermission = () => {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        setTracking(true);
+        new Notification("🛰️ Trip tracking started");
+
+        navigator.geolocation.getCurrentPosition(async position => {
+          const { latitude, longitude } = position.coords;
+          startCoords.current = { latitude, longitude };
+
+          try {
+            const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                message: `I want to start tracking my trip from this location`,
+                lat: latitude,
+                lng: longitude,
+                lang: language,
+                intent: 'trip_start_simple'
+              })
+            });
+
+            const data = await res.json();
+            const message = data.response || 'Now tracking your trip from your current location.';
+            setResponse(message);
+            speakResponse(message);
+          } catch (err) {
+            const fallback = 'Now tracking your trip from your current location.';
+            setResponse(fallback);
+            speakResponse(fallback);
+          }
+        });
+      }
+    });
+  };
 
   const speakResponse = (text) => {
     if (ttsEnabled && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      
-      const cleanText = text
-        .replace(/<a [^>]+>(.*?)<\/a>/gi, '$1') 
-        .replace(/<[^>]+>/g, '');              
+
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = text;
+
+      tempDiv.querySelectorAll('a').forEach(link => {
+        const span = document.createElement('span');
+        span.textContent = link.textContent;
+        link.replaceWith(span);
+      });
+
+      const cleanText = tempDiv.textContent.replace(/\n/g, ' ').trim();
 
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = language;
@@ -231,6 +315,14 @@ function App() {
             <option value="es-ES">Español</option>
           </select>
         </label>
+        <div style={{ margin: '2rem auto', maxWidth: '90vw', textAlign: 'center' }}>
+        <button
+          onClick={requestNotificationPermission}
+          style={{ ...buttonPrimary, maxWidth: '300px' }}
+        >
+          📍 Enable Trip Alerts
+        </button>
+      </div>
       </div>
 
       <div style={{
