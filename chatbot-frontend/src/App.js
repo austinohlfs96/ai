@@ -103,22 +103,22 @@ function App() {
   const requestNotificationPermission = async () => {
     try {
       const permission = await Notification.requestPermission();
-      
+  
       if (permission === 'granted') {
         setTracking(true);
-        
+  
         // Show initial notification
         const notification = new Notification("🛰️ Trip tracking started", {
           body: "Welcome to your parking area.",
           icon: "/icons/icon-192.png",
           requireInteraction: true
         });
-
+  
         // Set up location tracking
         navigator.geolocation.getCurrentPosition(async position => {
           const { latitude, longitude } = position.coords;
           startCoords.current = { latitude, longitude };
-
+  
           // Send initial location to server
           await fetch('https://chatbot-j9nx.onrender.com/ask', {
             method: 'POST',
@@ -132,30 +132,40 @@ function App() {
             })
           });
         });
+  
+        // ⏱️ Trigger a second notification after 10 seconds
+        setTimeout(() => {
+          new Notification("📍 Still tracking...", {
+            body: "We’re keeping an eye on your location. You can stop tracking anytime.",
+            icon: "/icons/icon-192.png"
+          });
+        }, 10000); // 10,000 ms = 10 seconds
+  
       } else {
         alert('Notification permission denied.');
       }
     } catch (err) {
       console.error('Error with notifications:', err);
-      alert('Failed to set up notifications. Please try again.');
+      alert('Please add Spotsurfer AI to your homescreen to receive trip alerts.');
     }
   };
+  
 
-  // Helper function for VAPID key conversion
-  function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
+  // // Helper function for VAPID key conversion
+  // function urlBase64ToUint8Array(base64String) {
+  //   const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  //   const base64 = (base64String + padding)
+  //     .replace(/-/g, '+')
+  //     .replace(/_/g, '/');
 
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
+  //   const rawData = window.atob(base64);
+  //   const outputArray = new Uint8Array(rawData.length);
 
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  }
+  //   for (let i = 0; i < rawData.length; ++i) {
+  //     outputArray[i] = rawData.charCodeAt(i);
+  //   }
+  //   return outputArray;
+  // }
 
   const speakResponse = (text) => {
     if (ttsEnabled && 'speechSynthesis' in window) {
