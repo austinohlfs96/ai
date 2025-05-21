@@ -1,6 +1,6 @@
-let trackingInterval = null;
 let trackingActive = false;
 
+// Install and activate
 self.addEventListener('install', event => {
   console.log('[SW] Installed');
   self.skipWaiting();
@@ -11,124 +11,96 @@ self.addEventListener('activate', event => {
   event.waitUntil(self.clients.claim());
 });
 
+// Handle Push Notifications from backend
 self.addEventListener('push', event => {
-  const data = event.data.json();
+  let data = {};
+  try {
+    data = event.data.json();
+  } catch (e) {
+    console.error('Push event error:', e);
+  }
+
   const options = {
-    body: data.body,
+    body: data.body || 'New update from SpotSurfer',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     tag: 'push-notification',
-    requireInteraction: true
+    requireInteraction: true,
+    data: {
+      url: '/',
+      ...data
+    },
+    actions: [
+      { action: 'stop', title: 'Stop Tracking', icon: '/icons/icon-192.png' },
+      { action: 'view', title: 'Open App', icon: '/icons/icon-192.png' }
+    ]
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(data.title || '📍 SpotSurfer Update', options)
   );
 });
 
-// Show notification
+// Show Notification (from postMessage)
 const showNotification = (title, body) => {
   const options = {
-    body: body,
+    body,
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
-    data: { type: 'tracking' },
     requireInteraction: true,
-    tag: 'trip-tracking',
-    silent: false,
-    vibrate: [200, 100, 200, 100, 200],
-    actions: [
-      { action: 'stop', title: 'Stop Tracking', icon: '/icons/icon-192.png' },
-      { action: 'view', title: 'View Location', icon: '/icons/icon-192.png' }
-    ],
-    priority: 'high',
-    renotify: true,
-    autoClose: false,
-    dir: 'auto',
-    lang: 'en-US',
-    image: '/icons/icon-512.png',
-    timestamp: Date.now()
+    tag: 'manual-notification',
+    data: { type: 'manual' }
   };
 
   self.registration.showNotification(title, options);
 };
 
-// Handle incoming messages from the client
+// Listen to messages from client
 self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'notification') {
-    showNotification(event.data.title, event.data.body);
-  } else if (event.data && event.data.type === 'start-tracking') {
-    startTrackingNotifications();
-  } else if (event.data && event.data.type === 'stop-tracking') {
-    stopTrackingNotifications();
-  }
-});
+  const data = event.data;
 
-// Register background sync
-self.addEventListener('sync', event => {
-  if (event.tag === 'tracking-sync') {
-    event.waitUntil(
-      showNotification(
-        "📍 Trip Update",
-        "Your location is being tracked in the background."
-      )
-    );
+  if (data?.type === 'notification') {
+    showNotification(data.title, data.body);
   }
-});
 
-// Handle periodic background sync
-self.addEventListener('periodicsync', event => {
-  if (event.tag === 'tracking-sync') {
-    event.waitUntil(
-      showNotification(
-        "📍 Still tracking...",
-        "We're keeping an eye on your location. You can stop tracking anytime."
-      )
-    );
-  }
-});
-
-// Start tracking notifications
-const startTrackingNotifications = () => {
-  if (!trackingActive) {
+  if (data?.type === 'start-tracking') {
     trackingActive = true;
-    
-    // Request background sync
-    if ('SyncManager' in self) {
-      self.registration.sync.register('tracking-sync');
-      
-      // Request periodic sync (Chrome only)
-      if ('periodicSync' in self.registration) {
-        self.registration.periodicSync.register('tracking-sync', {
-          minInterval: 10000 // 10 seconds
-        });
-      }
-    }
+    console.log('[SW] Trip tracking started');
   }
-};
 
-// Stop tracking notifications
-const stopTrackingNotifications = () => {
-  trackingActive = false;
-  
-  // Remove sync registrations
-  if ('SyncManager' in self) {
-    self.registration.sync.unregister('tracking-sync');
-    
-    if ('periodicSync' in self.registration) {
-      self.registration.periodicSync.unregister('tracking-sync');
-    }
+  if (data?.type === 'stop-tracking') {
+    trackingActive = false;
+    console.log('[SW] Trip tracking stopped');
   }
-};
+});
 
-// Handle notification clicks
+// Optional: Background Sync (works only in supported browsers)
+self.addEventListener('sync', event => {
+  if (event.tag === 'tracking-sync' && trackingActive) {
+    event.waitUntil(
+      showNotification("📍 Trip Update", "Your trip is still being tracked.")
+    );
+  }
+});
+
+// Optional: Periodic Sync (Chrome-only)
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'tracking-sync' && trackingActive) {
+    event.waitUntil(
+      showNotification("📡 Tracking Active", "Your location is still updating in the background.")
+    );
+  }
+});
+
+// Handle clicks on notifications
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  
+
   if (event.action === 'stop') {
-    stopTrackingNotifications();
+    trackingActive = false;
+
     event.waitUntil(
-      self.clients.matchAll().then(clients => {
+      self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
         clients.forEach(client => {
           client.postMessage({ type: 'stop-tracking' });
         });
@@ -137,17 +109,11 @@ self.addEventListener('notificationclick', event => {
     return;
   }
 
+  // "view" or default click behavior
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-      const client = clients.find(c => c.url === '/' && 'focus' in c);
-      
-      if (client) {
-        return client.focus();
-      }
-
-      if (clients.openWindow) {
-        return clients.openWindow('/');
-      }
+      const client = clients.find(c => c.url.includes('/') && 'focus' in c);
+      return client ? client.focus() : self.clients.openWindow('/');
     })
   );
 });

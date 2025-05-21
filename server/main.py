@@ -4,6 +4,7 @@ import openai
 import re
 import requests
 import time
+import json
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -13,6 +14,8 @@ from location_extraction import find_known_locations, get_distance
 from pywebpush import webpush, WebPushException
 import markdown2
 import datetime
+
+subscriptions = [1,2]
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -261,11 +264,47 @@ def not_found(e):
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     subscription_info = request.json
-    # Store subscription_info in your database
+    subscriptions.append(subscription_info)  # ✅ Store it
     return jsonify({"success": True}), 201
+
+@app.route('/unsubscribe', methods=['POST'])
+def unsubscribe():
+    subscription_info = request.json
+    subscriptions.remove(subscription_info)  # ✅ Remove it
+    return jsonify({"success": True}), 201
+
+@app.route('/send-notification', methods=['POST'])
+def send_notification():
+    try:
+        data = request.json
+        title = data.get("title", "📍 SpotSurfer Update")
+        body = data.get("body", "Your trip is still being tracked.")
+
+        message = json.dumps({ "title": title, "body": body })
+
+        print(f"🧪 Subscriptions count: {len(subscriptions)}")
+        if not subscriptions:
+            return jsonify({ "error": "No subscriptions to notify." }), 400
+
+        failures = 0
+        for sub in subscriptions:
+            try:
+                send_push_notification(sub, message)
+            except Exception as e:
+                logging.warning(f"Push to one subscription failed: {e}")
+                failures += 1
+
+        return jsonify({ "sent": len(subscriptions) - failures, "failed": failures })
+
+    except Exception as e:
+        logging.error(f"Error sending push notification: {e}")
+        return jsonify({ "error": "Notification failed!" }), 500
+
+
 
 def send_push_notification(subscription_info, message):
     try:
+        print("📤 Sending to subscription:", subscription_info.get("endpoint"))
         webpush(
             subscription_info=subscription_info,
             data=message,
@@ -273,7 +312,14 @@ def send_push_notification(subscription_info, message):
             vapid_claims=VAPID_CLAIMS
         )
     except WebPushException as ex:
-        print("I'm sorry, Dave, but I can't do that: {}", repr(ex))
+        print("❌ WebPushException occurred")
+        print("Exception:", repr(ex))
+        if ex.response is not None:
+            print("🔐 Status code:", ex.response.status_code)
+            print("📄 Response body:", ex.response.text)
+        raise
+
+
 
 @app.route('/ask', methods=['POST'])
 def ask():
