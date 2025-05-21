@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from weather import WeatherService
 from traffic import TrafficService
 from location_extraction import find_known_locations, get_distance
+from pywebpush import webpush, WebPushException
 import markdown2
 import datetime
 
@@ -21,6 +22,9 @@ load_dotenv()
 weather_api_key = os.getenv('WEATHER_API_KEY')
 maps_api_key = os.getenv('GOOGLE_MAPS_API_KEY')
 openai.api_key = os.getenv('key')
+VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY')
+VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY')
+VAPID_CLAIMS = {"sub": "austin@spotsurfer.com"}
 
 # Initialize services
 weather_service = WeatherService(weather_api_key)
@@ -253,6 +257,23 @@ def serve_react():
 @app.errorhandler(404)
 def not_found(e):
     return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/subscribe', methods=['POST'])
+def subscribe():
+    subscription_info = request.json
+    # Store subscription_info in your database
+    return jsonify({"success": True}), 201
+
+def send_push_notification(subscription_info, message):
+    try:
+        webpush(
+            subscription_info=subscription_info,
+            data=message,
+            vapid_private_key=VAPID_PRIVATE_KEY,
+            vapid_claims=VAPID_CLAIMS
+        )
+    except WebPushException as ex:
+        print("I'm sorry, Dave, but I can't do that: {}", repr(ex))
 
 @app.route('/ask', methods=['POST'])
 def ask():
