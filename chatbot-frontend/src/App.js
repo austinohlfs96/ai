@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { marked } from 'marked';
 
+// Style objects
 const buttonPrimary = {
   background: 'linear-gradient(90deg, #ff7a00, #ff3c00)',
   color: '#fff',
@@ -35,6 +36,7 @@ const buttonDanger = {
   color: '#ff5c5c'
 };
 
+// Markdown setup
 marked.setOptions({
   breaks: true,
   gfm: true,
@@ -55,6 +57,14 @@ function App() {
   const returnNotified = useRef(false);
 
   useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').then(() =>
+        console.log("✅ Service worker registered")
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     if (tracking) {
       const interval = setInterval(() => {
         navigator.geolocation.getCurrentPosition(pos => {
@@ -65,10 +75,11 @@ function App() {
             return;
           }
 
-          const dist = (a, b) => Math.sqrt(
-            Math.pow(a.latitude - b.latitude, 2) +
-            Math.pow(a.longitude - b.longitude, 2)
-          );
+          const dist = (a, b) =>
+            Math.sqrt(
+              Math.pow(a.latitude - b.latitude, 2) +
+              Math.pow(a.longitude - b.longitude, 2)
+            );
 
           const distance = dist(startCoords.current, { latitude, longitude });
 
@@ -94,7 +105,7 @@ function App() {
       const permission = await Notification.requestPermission();
 
       if (permission !== 'granted') {
-        alert("Notification permission not granted. Please enable notifications.");
+        alert("Notification permission not granted.");
         return;
       }
 
@@ -111,7 +122,6 @@ function App() {
       setTracking(true);
 
       new Notification("🛰️ Trip tracking started");
-
       setTimeout(() => {
         new Notification("⏱️ Reminder: SpotSurfer is tracking your trip. Drive safely!");
       }, 15000);
@@ -129,23 +139,21 @@ function App() {
       });
 
       const data = await res.json();
-      const message = data.response || 'Now tracking your trip from your current location.';
+      const message = data.response || 'Now tracking your trip.';
       setResponse(message);
       speakResponse(message);
 
     } catch (err) {
       console.error("Trip tracking failed:", err);
-      alert("⚠️ Trip tracking could not start. Please ensure location and notification permissions are allowed.");
+      alert("⚠️ Please allow location & notification permissions.");
     }
   };
 
   const speakResponse = (text) => {
     if (ttsEnabled && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = text;
-
       tempDiv.querySelectorAll('a').forEach(link => {
         const span = document.createElement('span');
         span.textContent = link.textContent;
@@ -153,7 +161,6 @@ function App() {
       });
 
       const cleanText = tempDiv.textContent.replace(/\n/g, ' ').trim();
-
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = language;
       window.speechSynthesis.speak(utterance);
@@ -169,7 +176,7 @@ function App() {
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!vttEnabled || !SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser.");
+      alert("Speech recognition not supported.");
       return;
     }
 
@@ -179,12 +186,10 @@ function App() {
     recognition.continuous = false;
 
     recognition.start();
-
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
     };
-
     recognition.onerror = (event) => {
       console.error("Speech recognition error:", event);
     };
@@ -208,7 +213,7 @@ function App() {
       lat = position.coords.latitude;
       lng = position.coords.longitude;
     } catch (geoError) {
-      const allowFallback = window.confirm("We couldn’t access your location. To get the best recommendations, please enable location access. Would you like to continue without location?");
+      const allowFallback = window.confirm("Location not accessible. Continue anyway?");
       if (!allowFallback) {
         setLoading(false);
         return;
@@ -223,11 +228,11 @@ function App() {
       });
 
       const data = await res.json();
-      const reply = data.response || 'No response';
+      const reply = data.response || 'No response.';
       setResponse(reply);
       speakResponse(reply);
-    } catch (serverError) {
-      console.error("Server error:", serverError);
+    } catch (err) {
+      console.error("Server error:", err);
       setResponse('⚠️ Unable to contact the server.');
     }
 
@@ -246,7 +251,7 @@ function App() {
   };
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #0f0f0f, #121212)', color: '#fff', minHeight: '100vh', paddingBottom: '4rem', position: 'relative' }}>
+    <div style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #0f0f0f, #121212)', color: '#fff', minHeight: '100vh', paddingBottom: '4rem' }}>
       <div style={{ textAlign: 'center', padding: '3rem 1rem 1rem' }}>
         <h1 style={{ fontSize: 'clamp(2rem, 8vw, 3rem)', fontWeight: 800, background: 'linear-gradient(to right, #ff7a00, #ff3c00)', WebkitBackgroundClip: 'text', color: 'transparent' }}>Ask SpotSurfer AI</h1>
       </div>
@@ -254,11 +259,6 @@ function App() {
       <div style={cardStyle}>
         <h3 style={{ marginTop: 0, fontSize: '1.25rem', fontWeight: 600 }}>Response:</h3>
         <div style={{ marginTop: '1rem', lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: marked.parse(response) }} />
-        {loading && (
-          <div style={{ fontStyle: 'italic', color: '#aaa', marginTop: '1rem' }}>
-            SpotSurfer is thinking<span style={{ animation: 'blink 1.4s infinite steps(1, end)' }}>...</span>
-          </div>
-        )}
         {response && ttsEnabled && (
           <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <button onClick={() => speakResponse(response)} style={buttonSecondary}>🔊 Read Aloud Again</button>
@@ -275,68 +275,41 @@ function App() {
           placeholder="e.g. Where should I park for the GoPro Games?"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onFocus={(e) => e.target.style.boxShadow = '0 0 12px #ff7a00'}
-          onBlur={(e) => e.target.style.boxShadow = 'inset 0 1px 3px rgba(0,0,0,0.4)'}
           style={{
             width: '100%',
-            maxWidth: '100%',
             padding: '1rem',
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
             color: '#fff',
             border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: '0.75rem',
             fontSize: '1rem',
-            lineHeight: 1.5,
             resize: 'vertical',
-            outline: 'none',
-            marginBottom: '1.25rem',
-            boxSizing: 'border-box'
+            marginBottom: '1.25rem'
           }}
         />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            style={{ ...buttonPrimary, opacity: loading ? 0.6 : 1 }}
-          >
+          <button onClick={handleSubmit} disabled={loading} style={{ ...buttonPrimary, opacity: loading ? 0.6 : 1 }}>
             {loading ? 'Loading...' : '🚀 Ask SpotSurfer'}
           </button>
-          <button
-            onClick={startListening}
-            disabled={!vttEnabled}
-            style={buttonSecondary}
-          >
+          <button onClick={startListening} disabled={!vttEnabled} style={buttonSecondary}>
             🎤 Speak Your Question
           </button>
         </div>
       </div>
 
-      <div style={{ ...cardStyle, display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.95rem' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <input type="checkbox" checked={ttsEnabled} onChange={(e) => setTtsEnabled(e.target.checked)} /> Enable TTS
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <input type="checkbox" checked={vttEnabled} onChange={(e) => setVttEnabled(e.target.checked)} /> Enable VTT
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ ...cardStyle, display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
+        <label><input type="checkbox" checked={ttsEnabled} onChange={(e) => setTtsEnabled(e.target.checked)} /> Enable TTS</label>
+        <label><input type="checkbox" checked={vttEnabled} onChange={(e) => setVttEnabled(e.target.checked)} /> Enable VTT</label>
+        <label>
           Language:
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.08)', color: '#fff' }}
-          >
+          <select value={language} onChange={(e) => setLanguage(e.target.value)} style={{ marginLeft: '0.5rem' }}>
             <option value="en-US">English</option>
             <option value="es-ES">Español</option>
           </select>
         </label>
-        <div style={{ margin: '2rem auto', maxWidth: '90vw', textAlign: 'center' }}>
-        <button
-          onClick={requestNotificationPermission}
-          style={{ ...buttonPrimary, maxWidth: '300px' }}
-        >
+        <button onClick={requestNotificationPermission} style={{ ...buttonPrimary, maxWidth: '300px', margin: '0 auto' }}>
           📍 Enable Trip Alerts
         </button>
-      </div>
       </div>
 
       <div style={{
