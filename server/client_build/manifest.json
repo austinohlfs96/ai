@@ -20,12 +20,22 @@
   "apple-mobile-web-app-capable": "yes",
   "apple-mobile-web-app-status-bar-style": "black-translucent",
   "apple-mobile-web-app-title": "SpotSurfer",
-  "permissions": [
-    "notifications",
-    "background-sync"
-  ],
-  "gcm_user_visible_only": true,
+  "permissions": {
+    "notifications": {
+      "description": "Required for sending trip tracking notifications"
+    },
+    "background-sync": {
+      "description": "Required for sending notifications when the app is closed"
+    },
+    "periodic-background-sync": {
+      "description": "Required for sending periodic notifications"
+    }
+  },
   "background_sync": {
+    "minimum_interval": 60000, 
+    "max_attempts": 3
+  },
+  "periodic_sync": {
     "minimum_interval": 60000, 
     "max_attempts": 3
   }
