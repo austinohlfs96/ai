@@ -123,7 +123,11 @@ function App() {
 
       new Notification("🛰️ Trip tracking started");
       setTimeout(() => {
-        new Notification("⏱️ Reminder: SpotSurfer is tracking your trip. Drive safely!");
+        new Notification("⏱️ Reminder: SpotSurfer is tracking your trip. Drive safely!", {
+          body: "Welcome to your parking area.",
+          icon: "/icons/icon-192.png",
+          requireInteraction: true  // ⚠️ Only works on some platforms
+        });
       }, 15000);
 
       const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
@@ -145,7 +149,7 @@ function App() {
 
     } catch (err) {
       console.error("Trip tracking failed:", err);
-      alert("⚠️ Please allow location & notification permissions.");
+      alert("⚠️ Please add Spotsurfer AI to your home screen to receive trip alerts.");
     }
   };
 
