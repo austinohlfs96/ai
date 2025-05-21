@@ -11,6 +11,33 @@ self.addEventListener('activate', event => {
   event.waitUntil(self.clients.claim());
 });
 
+// Show notification
+const showNotification = (title, body) => {
+  const options = {
+    body: body,
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    data: { type: 'tracking' },
+    requireInteraction: true,
+    tag: 'trip-tracking',
+    silent: false,
+    vibrate: [200, 100, 200, 100, 200],
+    actions: [
+      { action: 'stop', title: 'Stop Tracking', icon: '/icons/icon-192.png' },
+      { action: 'view', title: 'View Location', icon: '/icons/icon-192.png' }
+    ],
+    priority: 'high',
+    renotify: true,
+    autoClose: false,
+    dir: 'auto',
+    lang: 'en-US',
+    image: '/icons/icon-512.png',
+    timestamp: Date.now()
+  };
+
+  self.registration.showNotification(title, options);
+};
+
 // Handle incoming messages from the client
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'notification') {
@@ -22,58 +49,60 @@ self.addEventListener('message', event => {
   }
 });
 
-// Show notification
-const showNotification = (title, body) => {
-  const options = {
-    body: body,
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
-    data: { type: 'tracking' },
-    requireInteraction: true, // Forces the notification to stay until clicked
-    tag: 'trip-tracking', // Unique tag for updates
-    silent: false, // Makes sure the notification is not silent
-    vibrate: [200, 100, 200, 100, 200], // More noticeable vibration pattern
-    actions: [
-      { action: 'stop', title: 'Stop Tracking', icon: '/icons/icon-192.png' },
-      { action: 'view', title: 'View Location', icon: '/icons/icon-192.png' }
-    ],
-    priority: 'high', // Makes it more likely to show when screen is locked
-    renotify: true, // Allows showing the same notification multiple times
-    autoClose: false, // Prevents automatic closing
-    dir: 'auto', // Automatic text direction
-    lang: 'en-US', // Specify language
-    image: '/icons/icon-512.png', // Larger image for better visibility
-    timestamp: Date.now() // Shows when the notification was created
-  };
+// Register background sync
+self.addEventListener('sync', event => {
+  if (event.tag === 'tracking-sync') {
+    event.waitUntil(
+      showNotification(
+        "📍 Trip Update",
+        "Your location is being tracked in the background."
+      )
+    );
+  }
+});
 
-  // Add custom data
-  options.data = {
-    url: '/', // URL to open when clicked
-    type: 'tracking',
-    timestamp: Date.now()
-  };
-
-  self.registration.showNotification(title, options);
-};
-
-// Start periodic notifications
-const startTrackingNotifications = () => {
-  if (!trackingActive) {
-    trackingActive = true;
-    trackingInterval = setInterval(() => {
+// Handle periodic background sync
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'tracking-sync') {
+    event.waitUntil(
       showNotification(
         "📍 Still tracking...",
         "We're keeping an eye on your location. You can stop tracking anytime."
-      );
-    }, 10000); // 10 seconds
+      )
+    );
+  }
+});
+
+// Start tracking notifications
+const startTrackingNotifications = () => {
+  if (!trackingActive) {
+    trackingActive = true;
+    
+    // Request background sync
+    if ('SyncManager' in self) {
+      self.registration.sync.register('tracking-sync');
+      
+      // Request periodic sync (Chrome only)
+      if ('periodicSync' in self.registration) {
+        self.registration.periodicSync.register('tracking-sync', {
+          minInterval: 10000 // 10 seconds
+        });
+      }
+    }
   }
 };
 
-// Stop periodic notifications
+// Stop tracking notifications
 const stopTrackingNotifications = () => {
   trackingActive = false;
-  if (trackingInterval) {
-    clearInterval(trackingInterval);
+  
+  // Remove sync registrations
+  if ('SyncManager' in self) {
+    self.registration.sync.unregister('tracking-sync');
+    
+    if ('periodicSync' in self.registration) {
+      self.registration.periodicSync.unregister('tracking-sync');
+    }
   }
 };
 
