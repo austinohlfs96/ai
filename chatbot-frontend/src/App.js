@@ -242,7 +242,7 @@ function App() {
         <div style={{ marginTop: '1rem', lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: marked.parse(response) }} />
         {loading && (
           <div style={{ fontStyle: 'italic', color: '#aaa', marginTop: '1rem' }}>
-            SpotSurfer is typing<span style={{ animation: 'blink 1.4s infinite steps(1, end)' }}>...</span>
+            SpotSurfer is thinking<span style={{ animation: 'blink 1.4s infinite steps(1, end)' }}>...</span>
           </div>
         )}
         {response && ttsEnabled && (
