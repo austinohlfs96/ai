@@ -144,46 +144,56 @@ function App() {
   const requestNotificationPermission = async () => {
     try {
       const permission = await Notification.requestPermission();
-      
-      if (permission === 'granted') {
-        setTracking(true);
-        
-        // Show initial notification
-        const notification = new Notification("🛰️ Trip tracking started", {
-          body: "Welcome to your parking area.",
+  
+      if (permission !== 'granted') {
+        alert('Notification permission denied.');
+        return;
+      }
+  
+      setTracking(true);
+  
+      // Send a browser notification
+      new Notification("🛰️ Trip tracking started", {
+        body: "Welcome to your parking area.",
+        icon: "/icons/icon-192.png",
+        requireInteraction: true
+      });
+  
+      // Notify the service worker to start tracking (optional logic)
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'start-tracking' });
+      }
+  
+      // Get current location and notify server
+      navigator.geolocation.getCurrentPosition(async position => {
+        const { latitude, longitude } = position.coords;
+        startCoords.current = { latitude, longitude };
+  
+        await fetch('https://chatbot-j9nx.onrender.com/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: "I want to start tracking my trip from this location",
+            lat: latitude,
+            lng: longitude,
+            lang: language,
+            intent: 'trip_start_simple'
+          })
+        });
+      });
+  
+      // Optional follow-up notification
+      setTimeout(() => {
+        new Notification("✅ Success", {
+          body: "Your trip tracking is successfully set up.",
           icon: "/icons/icon-192.png",
           requireInteraction: true
         });
-
-        // Start tracking notifications via service worker
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({ type: 'start-tracking' });
-        }
-
-        // Set up location tracking
-        navigator.geolocation.getCurrentPosition(async position => {
-          const { latitude, longitude } = position.coords;
-          startCoords.current = { latitude, longitude };
-
-          // Send initial location to server
-          await fetch('https://chatbot-j9nx.onrender.com/ask', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: "I want to start tracking my trip from this location",
-              lat: latitude,
-              lng: longitude,
-              lang: language,
-              intent: 'trip_start_simple'
-            })
-          });
-        });
-      } else {
-        alert('Notification permission denied.');
-      }
+      }, 10000);
+  
     } catch (err) {
       console.error('Error with notifications:', err);
-      alert('Please add Spotsurfer AI to your homescreen to receive trip alerts.');
+      alert('Please add Spotsurfer AI to your homescreen to receive trip alerts!');
     }
   };
 
