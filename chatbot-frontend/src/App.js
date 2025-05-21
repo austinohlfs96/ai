@@ -89,85 +89,55 @@ function App() {
     }
   }, [tracking]);
 
-  // const requestNotificationPermission = () => {
-  //   Notification.requestPermission().then(permission => {
-  //     if (permission === 'granted') {
-  //       setTracking(true);
-  //       new Notification("🛰️ Trip tracking started");
+  const requestNotificationPermission = async () => {
+    try {
+      const permission = await Notification.requestPermission();
 
-  //       navigator.geolocation.getCurrentPosition(async position => {
-  //         const { latitude, longitude } = position.coords;
-  //         startCoords.current = { latitude, longitude };
-
-  //         try {
-  //           const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
-  //             method: 'POST',
-  //             headers: { 'Content-Type': 'application/json' },
-  //             body: JSON.stringify({
-  //               message: `I want to start tracking my trip from this location`,
-  //               lat: latitude,
-  //               lng: longitude,
-  //               lang: language,
-  //               intent: 'trip_start_simple'
-  //             })
-  //           });
-
-  //           const data = await res.json();
-  //           const message = data.response || 'Now tracking your trip from your current location.';
-  //           setResponse(message);
-  //           speakResponse(message);
-  //         } catch (err) {
-  //           const fallback = 'Now tracking your trip from your current location.';
-  //           setResponse(fallback);
-  //           speakResponse(fallback);
-  //         }
-  //       });
-  //     }
-  //   });
-  // };
-
-  const requestNotificationPermission = () => {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        setTracking(true);
-        new Notification("🛰️ Trip tracking started");
-  
-        // ✅ Notify 15 seconds later
-        setTimeout(() => {
-          new Notification("⏱️ Reminder: SpotSurfer is tracking your trip. Drive safely!");
-        }, 15000); // 15000ms = 15 seconds
-  
-        navigator.geolocation.getCurrentPosition(async position => {
-          const { latitude, longitude } = position.coords;
-          startCoords.current = { latitude, longitude };
-  
-          try {
-            const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                message: `I want to start tracking my trip from this location`,
-                lat: latitude,
-                lng: longitude,
-                lang: language,
-                intent: 'trip_start_simple'
-              })
-            });
-  
-            const data = await res.json();
-            const message = data.response || 'Now tracking your trip from your current location.';
-            setResponse(message);
-            speakResponse(message);
-          } catch (err) {
-            const fallback = 'Now tracking your trip from your current location.';
-            setResponse(fallback);
-            speakResponse(fallback);
-          }
-        });
+      if (permission !== 'granted') {
+        alert("Notification permission not granted. Please enable notifications.");
+        return;
       }
-    });
+
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      startCoords.current = { latitude, longitude };
+      setTracking(true);
+
+      new Notification("🛰️ Trip tracking started");
+
+      setTimeout(() => {
+        new Notification("⏱️ Reminder: SpotSurfer is tracking your trip. Drive safely!");
+      }, 15000);
+
+      const res = await fetch('https://chatbot-j9nx.onrender.com/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: "I want to start tracking my trip from this location",
+          lat: latitude,
+          lng: longitude,
+          lang: language,
+          intent: 'trip_start_simple'
+        })
+      });
+
+      const data = await res.json();
+      const message = data.response || 'Now tracking your trip from your current location.';
+      setResponse(message);
+      speakResponse(message);
+
+    } catch (err) {
+      console.error("Trip tracking failed:", err);
+      alert("⚠️ Trip tracking could not start. Please ensure location and notification permissions are allowed.");
+    }
   };
-  
 
   const speakResponse = (text) => {
     if (ttsEnabled && 'speechSynthesis' in window) {
@@ -222,6 +192,7 @@ function App() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setResponse("🤔 SpotSurfer is thinking...");
     let lat = null;
     let lng = null;
 
