@@ -88,7 +88,7 @@ function App() {
           // Subscribe to push notifications
           return registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array('BM4FjZk0AB2mO2x63aPEa2MNqkzhNY-E1HExxVUYfrCN9uuXTZ_UWXKkjBVjNjwV3Y-b6WkRqP2CWM6WqCa-vuU')
+            applicationServerKey: urlBase64ToUint8Array('BEPKSQoNHf4C17Wm2xFKnGN8MGPElaegcTESiKlRDkidbDEHU2X4XW61yO8Sk3NjDj57ursrAw7Cc1YEXKSHNKU')
           });
         })
         .then(subscription => {

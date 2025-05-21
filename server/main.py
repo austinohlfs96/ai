@@ -15,7 +15,7 @@ from pywebpush import webpush, WebPushException
 import markdown2
 import datetime
 
-subscriptions = [1,2]
+subscriptions = []
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +27,7 @@ maps_api_key = os.getenv('GOOGLE_MAPS_API_KEY')
 openai.api_key = os.getenv('key')
 VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY')
 VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY')
-VAPID_CLAIMS = {"sub": "austin@spotsurfer.com"}
+VAPID_CLAIMS = {"sub": "mailto:austin@spotsurfer.com"}
 
 # Initialize services
 weather_service = WeatherService(weather_api_key)
@@ -264,8 +264,10 @@ def not_found(e):
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     subscription_info = request.json
-    subscriptions.append(subscription_info)  # ✅ Store it
+    print("📥 Received subscription info:", subscription_info)
+    subscriptions.append(subscription_info)
     return jsonify({"success": True}), 201
+
 
 @app.route('/unsubscribe', methods=['POST'])
 def unsubscribe():
