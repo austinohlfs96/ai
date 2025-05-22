@@ -62,6 +62,9 @@ function App() {
   const [language, setLanguage] = useState('en-US');
   const [tracking, setTracking] = useState(false);
 
+  const destinationCoords = { latitude: 39.627705, longitude: -106.501339 };
+const arrivalNotified = useRef(false);
+
   const startCoords = useRef(null);
   const destinationReached = useRef(false);
   const returnNotified = useRef(false);
@@ -119,31 +122,49 @@ function App() {
       const interval = setInterval(() => {
         navigator.geolocation.getCurrentPosition(pos => {
           const { latitude, longitude } = pos.coords;
-          if (!startCoords.current) {
-            startCoords.current = { latitude, longitude };
-            return;
-          }
+  
+          const current = { latitude, longitude };
+  
+          // Simple distance calculation
           const dist = (a, b) =>
             Math.sqrt(
               Math.pow(a.latitude - b.latitude, 2) +
               Math.pow(a.longitude - b.longitude, 2)
             );
-          const distance = dist(startCoords.current, { latitude, longitude });
-          if (!destinationReached.current && distance > 0.005) {
+  
+          // Check distance from destination
+          const distanceToDestination = dist(destinationCoords, current);
+  
+          if (!arrivalNotified.current && distanceToDestination < 0.002) { // ~200 meters
+            arrivalNotified.current = true;
+            showNotification("🅿️ You've arrived at the Walmart parking lot!");
+          }
+  
+          // Optional: handle return to start or leaving zone
+          if (!startCoords.current) {
+            startCoords.current = current;
+            return;
+          }
+  
+          const distanceFromStart = dist(startCoords.current, current);
+  
+          if (!destinationReached.current && distanceFromStart > 0.005) {
             destinationReached.current = true;
             showNotification("📍 You’ve reached your destination zone.");
           }
-          if (destinationReached.current && !returnNotified.current && distance < 0.002) {
+  
+          if (destinationReached.current && !returnNotified.current && distanceFromStart < 0.002) {
             returnNotified.current = true;
             showNotification("🏠 Welcome back to your starting point.");
             setTracking(false);
           }
         });
       }, 10000);
+  
       return () => clearInterval(interval);
     }
   }, [tracking]);
-
+  
   const showNotification = (body) => {
     if (navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({
