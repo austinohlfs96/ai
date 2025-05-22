@@ -88,22 +88,25 @@ const showNotification = (title, body) => {
 self.addEventListener('message', event => {
   const data = event.data;
 
+  if (data?.type === 'delayed-notification') {
+    setTimeout(() => {
+      self.registration.showNotification(data.title, data.options);
+    }, data.delay);
+  }
+
   if (data?.type === 'show-notification') {
-    const { title, options } = data;
-    console.log('[SW] Showing notification:', title);
-    self.registration.showNotification(title, options);
+    self.registration.showNotification(data.title, data.options);
   }
 
   if (data?.type === 'start-tracking') {
     trackingActive = true;
-    console.log('[SW] Trip tracking started');
   }
 
   if (data?.type === 'stop-tracking') {
     trackingActive = false;
-    console.log('[SW] Trip tracking stopped');
   }
 });
+
 
 
 // Optional: Background Sync (where supported)

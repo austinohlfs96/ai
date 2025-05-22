@@ -213,7 +213,8 @@ function App() {
       setTimeout(() => {
         if (navigator.serviceWorker.controller) {
           navigator.serviceWorker.controller.postMessage({
-            type: 'show-notification',
+            type: 'delayed-notification',
+            delay: 10000,
             title: '✅ Success',
             options: {
               body: "Your trip tracking is successfully set up.",
