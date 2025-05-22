@@ -36,7 +36,6 @@ const buttonDanger = {
   color: '#ff5c5c'
 };
 
-// Markdown setup
 marked.setOptions({
   breaks: true,
   gfm: true,
@@ -45,13 +44,9 @@ marked.setOptions({
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
-
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
-
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
@@ -84,7 +79,6 @@ function App() {
       Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
           console.log('✅ Notification permission granted');
-          // You can now subscribe the user to push notifications
         } else {
           console.warn('❌ Notification permission denied');
         }
@@ -94,156 +88,84 @@ function App() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(registration => {
-          console.log('✅ Service Worker registered with scope:', registration.scope);
-          return registration.pushManager.getSubscription().then(async existingSub => {
-            if (existingSub) {
-              console.log('🔁 Already subscribed to push.');
-              return existingSub;
-            }
-            return registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(
-                'BEPKSQoNHf4C17Wm2xFKnGN8MGPElaegcTESiKlRDkidbDEHU2X4XW61yO8Sk3NjDj57ursrAw7Cc1YEXKSHNKU'
-              )
-            });
+      navigator.serviceWorker.ready.then(registration => {
+        return registration.pushManager.getSubscription().then(async existingSub => {
+          if (existingSub) {
+            console.log('🔁 Already subscribed to push.');
+            return existingSub;
+          }
+          return registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(
+              'BEPKSQoNHf4C17Wm2xFKnGN8MGPElaegcTESiKlRDkidbDEHU2X4XW61yO8Sk3NjDj57ursrAw7Cc1YEXKSHNKU'
+            )
           });
-        })
-        .then(subscription => {
-          console.log('📨 Push subscription:', subscription);
-          return fetch('/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(subscription)
-          });
-        })
-        .catch(err => console.error('❌ Service worker or push setup failed:', err));
+        });
+      }).then(subscription => {
+        console.log('📨 Push subscription:', subscription);
+        return fetch('/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription)
+        });
+      }).catch(err => console.error('❌ Service worker or push setup failed:', err));
     } else {
       console.warn('🛑 Service Workers or PushManager not supported in this browser.');
     }
   }, []);
-  
-  
 
   useEffect(() => {
     if (tracking) {
       const interval = setInterval(() => {
         navigator.geolocation.getCurrentPosition(pos => {
           const { latitude, longitude } = pos.coords;
-
           if (!startCoords.current) {
             startCoords.current = { latitude, longitude };
             return;
           }
-
           const dist = (a, b) =>
             Math.sqrt(
               Math.pow(a.latitude - b.latitude, 2) +
               Math.pow(a.longitude - b.longitude, 2)
             );
-
           const distance = dist(startCoords.current, { latitude, longitude });
-
           if (!destinationReached.current && distance > 0.005) {
             destinationReached.current = true;
-            new Notification("📍 You’ve reached your destination zone.");
+            showNotification("📍 You’ve reached your destination zone.");
           }
-
           if (destinationReached.current && !returnNotified.current && distance < 0.002) {
             returnNotified.current = true;
-            new Notification("🏠 Welcome back to your starting point.");
+            showNotification("🏠 Welcome back to your starting point.");
             setTracking(false);
           }
         });
       }, 10000);
-
       return () => clearInterval(interval);
     }
   }, [tracking]);
 
-  const requestNotificationPermission = async () => {
-    try {
-      const permission = await Notification.requestPermission();
-  
-      if (permission !== 'granted') {
-        alert('Notification permission denied.');
-        return;
-      }
-  
-      setTracking(true);
-  
-      // Send a browser notification
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'show-notification',
-          title: "🛰️ Trip tracking started",
-          options: {
-            body: "Welcome to your parking area.",
-            icon: "/icons/icon-192.png"
-          }
-        });
-      }
-      
-  
-      // Notify the service worker to start tracking (optional logic)
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ type: 'start-tracking' });
-      }
-  
-      // Get current location and notify server
-      navigator.geolocation.getCurrentPosition(async position => {
-        const { latitude, longitude } = position.coords;
-        startCoords.current = { latitude, longitude };
-  
-        await fetch('https://chatbot-j9nx.onrender.com/ask', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: "I want to start tracking my trip from this location",
-            lat: latitude,
-            lng: longitude,
-            lang: language,
-            intent: 'trip_start_simple'
-          })
-        });
-      });
-  
-      // Optional follow-up notification
-      setTimeout(() => {
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'delayed-notification',
-            delay: 10000,
-            title: '✅ Success',
-            options: {
-              body: "Your trip tracking is successfully set up.",
-              icon: "/icons/icon-192.png"
-            }
-          });
+  const showNotification = (body) => {
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'show-notification',
+        title: body,
+        options: {
+          body,
+          icon: "/icons/icon-192.png"
         }
-      }, 10000);
-  
-    } catch (err) {
-      console.error('Error with notifications:', err);
-      alert('Please add Spotsurfer AI to your homescreen to receive trip alerts!');
+      });
     }
   };
 
   const initializePushFlow = async () => {
     try {
-      // 1. Ask for notification permission
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         alert('Please enable notifications to receive alerts.');
         return;
       }
   
-      // 2. Register the service worker
-      const registration = await navigator.serviceWorker.register('/service-worker.js');
-      console.log('✅ Service worker registered:', registration);
-  
-      // 3. Subscribe to push
+      const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(
@@ -251,7 +173,6 @@ function App() {
         )
       });
   
-      // 4. Send subscription to your backend
       await fetch('/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -265,12 +186,43 @@ function App() {
   };
   
 
-  // Handle stop tracking
+  const requestNotificationPermission = async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        alert('Notification permission denied.');
+        return;
+      }
+      setTracking(true);
+      showNotification("🛰️ Trip tracking started\nWelcome to your parking area.");
+      navigator.serviceWorker.controller?.postMessage({ type: 'start-tracking' });
+      navigator.geolocation.getCurrentPosition(async position => {
+        const { latitude, longitude } = position.coords;
+        startCoords.current = { latitude, longitude };
+        await fetch('https://chatbot-j9nx.onrender.com/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: "I want to start tracking my trip from this location",
+            lat: latitude,
+            lng: longitude,
+            lang: language,
+            intent: 'trip_start_simple'
+          })
+        });
+      });
+      setTimeout(() => {
+        showNotification("✅ Success\nYour trip tracking is successfully set up.");
+      }, 5000);
+    } catch (err) {
+      console.error('Error with notifications:', err);
+      alert('Please add Spotsurfer AI to your homescreen to receive trip alerts!');
+    }
+  };
+
   const stopTracking = () => {
     setTracking(false);
-    if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'stop-tracking' });
-    }
+    navigator.serviceWorker.controller?.postMessage({ type: 'stop-tracking' });
   };
 
   const speakResponse = (text) => {
