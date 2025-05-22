@@ -172,7 +172,9 @@ const arrivalNotified = useRef(false);
         title: body,
         options: {
           body,
-          icon: "/icons/icon-192.png"
+          icon: "/icons/icon-192.png",
+          badge: "/icons/icon-192.png",
+          requireInteraction: true
         }
       });
     }
