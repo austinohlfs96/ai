@@ -183,7 +183,6 @@ function App() {
       new Notification("🛰️ Trip tracking started", {
         body: "Welcome to your parking area.",
         icon: "/icons/icon-192.png",
-        requireInteraction: true
       });
   
       // Notify the service worker to start tracking (optional logic)
@@ -214,7 +213,6 @@ function App() {
         new Notification("✅ Success", {
           body: "Your trip tracking is successfully set up.",
           icon: "/icons/icon-192.png",
-          requireInteraction: true
         });
       }, 10000);
   
