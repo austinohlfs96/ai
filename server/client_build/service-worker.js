@@ -88,8 +88,10 @@ const showNotification = (title, body) => {
 self.addEventListener('message', event => {
   const data = event.data;
 
-  if (data?.type === 'notification') {
-    showNotification(data.title, data.body);
+  if (data?.type === 'show-notification') {
+    const { title, options } = data;
+    console.log('[SW] Showing notification:', title);
+    self.registration.showNotification(title, options);
   }
 
   if (data?.type === 'start-tracking') {
@@ -102,6 +104,7 @@ self.addEventListener('message', event => {
     console.log('[SW] Trip tracking stopped');
   }
 });
+
 
 // Optional: Background Sync (where supported)
 self.addEventListener('sync', event => {
@@ -121,9 +124,4 @@ self.addEventListener('periodicsync', event => {
   }
 });
 
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'show-notification') {
-    const { title, options } = event.data;
-    self.registration.showNotification(title, options);
-  }
-});
+
