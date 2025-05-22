@@ -234,13 +234,18 @@ const arrivalNotified = useRef(false);
       });
       setTimeout(() => {
         showNotification("✅ Success\nYour trip tracking is successfully set up.");
-      }, 5000);
+  
+        // Second notification follow-up
+        setTimeout(() => {
+          showNotification("📡 Tracking is active\nWe'll notify you when you arrive at your destination.");
+        }, 10000); // 10 seconds after the success notification
+  
+      }, 10000); // First notification after 10s
+  
     } catch (err) {
       console.error('Error with notifications:', err);
-      alert('Please add Spotsurfer AI to your homescreen to receive trip alerts!');
     }
   };
-
   const stopTracking = () => {
     setTracking(false);
     navigator.serviceWorker.controller?.postMessage({ type: 'stop-tracking' });
