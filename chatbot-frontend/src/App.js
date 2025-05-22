@@ -180,10 +180,17 @@ function App() {
       setTracking(true);
   
       // Send a browser notification
-      new Notification("🛰️ Trip tracking started", {
-        body: "Welcome to your parking area.",
-        icon: "/icons/icon-192.png",
-      });
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'show-notification',
+          title: "🛰️ Trip tracking started",
+          options: {
+            body: "Welcome to your parking area.",
+            icon: "/icons/icon-192.png"
+          }
+        });
+      }
+      
   
       // Notify the service worker to start tracking (optional logic)
       if (navigator.serviceWorker.controller) {
@@ -210,10 +217,16 @@ function App() {
   
       // Optional follow-up notification
       setTimeout(() => {
-        new Notification("✅ Success", {
-          body: "Your trip tracking is successfully set up.",
-          icon: "/icons/icon-192.png",
-        });
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'show-notification',
+            title: '✅ Success',
+            options: {
+              body: "Your trip tracking is successfully set up.",
+              icon: "/icons/icon-192.png"
+            }
+          });
+        }
       }, 10000);
   
     } catch (err) {

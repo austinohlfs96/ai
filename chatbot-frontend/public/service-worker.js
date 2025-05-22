@@ -120,3 +120,10 @@ self.addEventListener('periodicsync', event => {
     );
   }
 });
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'show-notification') {
+    const { title, options } = event.data;
+    self.registration.showNotification(title, options);
+  }
+});
