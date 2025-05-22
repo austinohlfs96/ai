@@ -224,6 +224,41 @@ function App() {
     }
   };
 
+  const initializePushFlow = async () => {
+    try {
+      // 1. Ask for notification permission
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        alert('Please enable notifications to receive alerts.');
+        return;
+      }
+  
+      // 2. Register the service worker
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('✅ Service worker registered:', registration);
+  
+      // 3. Subscribe to push
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(
+          'BEPKSQoNHf4C17Wm2xFKnGN8MGPElaegcTESiKlRDkidbDEHU2X4XW61yO8Sk3NjDj57ursrAw7Cc1YEXKSHNKU'
+        )
+      });
+  
+      // 4. Send subscription to your backend
+      await fetch('/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription)
+      });
+  
+      alert('📬 Notifications enabled! You’re all set.');
+    } catch (err) {
+      console.error('❌ Push init error:', err);
+    }
+  };
+  
+
   // Handle stop tracking
   const stopTracking = () => {
     setTracking(false);
@@ -390,12 +425,16 @@ function App() {
             <option value="es-ES">Español</option>
           </select>
         </label>
+        <button onClick={initializePushFlow} style={{ ...buttonPrimary, maxWidth: '300px', margin: '0 auto' }}>
+          ✅ Enable Push Notifications
+        </button>
         <button onClick={requestNotificationPermission} style={{ ...buttonPrimary, maxWidth: '300px', margin: '0 auto' }}>
           📍 Enable Trip Alerts
         </button>
         <button onClick={stopTracking} style={{ ...buttonDanger, maxWidth: '300px', margin: '0 auto' }}>
           🚫 Disable Trip Alerts
         </button>
+        
       </div>
 
       <div style={{
