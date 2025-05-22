@@ -71,9 +71,8 @@ self.addEventListener('notificationclick', event => {
 });
 
 // Handle manual notification via postMessage
-const showNotification = (title, body) => {
-  const options = {
-    body,
+const showNotification = (title, options = {}) => {
+  const defaultOptions = {
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     requireInteraction: true,
@@ -81,8 +80,12 @@ const showNotification = (title, body) => {
     data: { type: 'manual' }
   };
 
-  self.registration.showNotification(title, options);
+  return self.registration.showNotification(title, {
+    ...defaultOptions,
+    ...options
+  });
 };
+
 
 // Listen for messages from client
 self.addEventListener('message', event => {
@@ -113,7 +116,7 @@ self.addEventListener('message', event => {
 self.addEventListener('sync', event => {
   if (event.tag === 'tracking-sync' && trackingActive) {
     event.waitUntil(
-      showNotification("📍 Trip Update", "Your trip is still being tracked.")
+      showNotification("📍 Trip Update", { body: "Your trip is still being tracked." })
     );
   }
 });
