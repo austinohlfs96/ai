@@ -238,9 +238,9 @@ const arrivalNotified = useRef(false);
         // Second notification follow-up
         setTimeout(() => {
           showNotification("📡 Tracking is active\nWe'll notify you when you arrive at your destination.");
-        }, 10000); // 10 seconds after the success notification
+        }, 5000); // 10 seconds after the success notification
   
-      }, 10000); // First notification after 10s
+      }, 5000); // First notification after 10s
   
     } catch (err) {
       console.error('Error with notifications:', err);
